@@ -319,13 +319,19 @@
     let items = [];
     let dragSrc = null;
 
-    // Populate datalist
-    const dl = document.getElementById('song-suggestions');
-    Object.keys(SONG_DB).sort().forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      dl.appendChild(opt);
-    });
+    function updateDatalist() {
+      const dl = document.getElementById('song-suggestions');
+      const used = new Set(items.filter(i => i.type === 'song').map(i => i.name));
+      dl.innerHTML = '';
+      Object.keys(SONG_DB).sort().forEach(name => {
+        if (!used.has(name)) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          dl.appendChild(opt);
+        }
+      });
+    }
+    updateDatalist();
 
     document.getElementById('song-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') addSong();
@@ -386,6 +392,7 @@
         li.addEventListener('dragend',   onDragEnd);
         list.appendChild(li);
       });
+      updateDatalist();
     }
 
     function onDragStart(e) { dragSrc = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
