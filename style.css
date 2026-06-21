@@ -1,0 +1,236 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  color: #fff;
+  font-family: sans-serif;
+  line-height: 1.6;
+}
+
+/* Navigation */
+nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: #000;
+  border-bottom: 1px solid #333;
+  padding: 16px 32px;
+  display: flex;
+  gap: 32px;
+  z-index: 100;
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+nav a:hover {
+  color: #aaa;
+}
+
+/* Sections */
+section {
+  min-height: 100vh;
+  padding: 120px 64px 80px;
+  border-bottom: 1px solid #222;
+}
+
+h1 {
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-size: 36px;
+  font-weight: 600;
+  margin-bottom: 48px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+p {
+  color: #aaa;
+  max-width: 640px;
+  margin-bottom: 16px;
+}
+
+/* Hero */
+#hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-instructions {
+  margin-top: 40px;
+  max-width: 560px;
+}
+
+.instructions-label {
+  font-size: 13px;
+  color: #fff;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+
+.instructions-sub {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.instructions-list {
+  list-style: none;
+  counter-reset: inst;
+  padding: 0;
+}
+
+.instructions-list li {
+  counter-increment: inst;
+  font-size: 14px;
+  color: #888;
+  padding: 8px 0;
+  border-bottom: 1px solid #1a1a1a;
+  display: flex;
+  gap: 12px;
+}
+
+.instructions-list li::before {
+  content: "(" counter(inst) ")";
+  color: #444;
+  min-width: 28px;
+  font-size: 13px;
+}
+
+/* Members */
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.member-card {
+  border: 1px solid #333;
+  padding: 24px;
+}
+
+.member-card .instrument {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.member-sns {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.member-sns a {
+  color: #666;
+  text-decoration: none;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #333;
+  padding-bottom: 1px;
+}
+
+.member-sns a:hover {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+/* Music / Live */
+.music-links {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.music-links a {
+  color: #fff;
+  border: 1px solid #444;
+  padding: 8px 20px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.music-links a:hover {
+  border-color: #fff;
+}
+
+table {
+  width: 100%;
+  max-width: 720px;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid #222;
+  font-size: 14px;
+}
+
+th {
+  color: #666;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Contact */
+.sns-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.sns-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.sns-links a:hover {
+  color: #aaa;
+}
+
+/* Setlist Tool Link */
+.tool-link {
+  display: inline-block;
+  margin-top: 32px;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 12px 32px;
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tool-link:hover {
+  background: #fff;
+  color: #000;
+}

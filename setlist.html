@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setlist Tool — MoritaSaki in the pool</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .tool-container { max-width: 900px; }
+
+    /* ── Input UI ── */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .meta-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    input[type="text"], input[type="date"] {
+      background: #111;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: sans-serif;
+      outline: none;
+    }
+    input[type="text"] { flex: 1; min-width: 200px; }
+    input[type="date"] { min-width: 160px; color-scheme: dark; }
+    input[type="text"]:focus,
+    input[type="date"]:focus { border-color: #fff; }
+    input::placeholder { color: #555; }
+    .meta-label {
+      font-size: 11px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    button {
+      background: #fff; color: #000; border: none;
+      padding: 10px 20px; font-size: 14px;
+      font-family: sans-serif; cursor: pointer; letter-spacing: 0.05em;
+    }
+    button:hover { background: #ccc; }
+    button.secondary {
+      background: transparent; color: #fff; border: 1px solid #444;
+    }
+    button.secondary:hover { border-color: #fff; background: transparent; }
+    button.pdf-btn {
+      background: #cc1111; color: #fff; border: none;
+    }
+    button.pdf-btn:hover { background: #aa0000; }
+
+    /* ── Drag list ── */
+    #song-list { list-style: none; margin-bottom: 24px; padding: 0; }
+    #song-list li {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border: 1px solid #222;
+      margin-bottom: 3px; cursor: grab; user-select: none;
+    }
+    #song-list li.mc-row { color: #555; }
+    #song-list li.dragging { opacity: 0.4; border-color: #fff; }
+    #song-list li.drag-over { border-color: #666; background: #0a0a0a; }
+    .song-num { color: #555; font-size: 12px; min-width: 28px; }
+    .song-name { flex: 1; font-size: 14px; }
+    .song-meta { font-size: 11px; color: #444; white-space: nowrap; }
+    .remove-btn {
+      background: transparent; color: #333; border: none;
+      padding: 0 4px; font-size: 18px; cursor: pointer; line-height: 1;
+    }
+    .remove-btn:hover { color: #fff; }
+
+    /* ── Tabs ── */
+    .tab-nav {
+      display: flex; gap: 4px; margin-top: 48px;
+      border-bottom: 1px solid #333;
+    }
+    .tab-btn {
+      background: transparent; color: #555;
+      border: 1px solid #333; border-bottom: none;
+      padding: 10px 24px; font-size: 13px; cursor: pointer;
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: #fff; border-color: #fff; background: #000; }
+    .tab-panel { padding: 24px 0; display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Sheet header (inside output) ── */
+    .print-sheet { font-family: 'Arial', sans-serif; }
+
+    .sheet-meta { margin-bottom: 2px; padding: 0; text-align: center; }
+    .sheet-meta-date  { font-size: 16px; color: #111; padding: 4px 0; font-weight: 700; }
+    .sheet-meta-venue { font-size: 16px; color: #111; padding: 2px 0; font-weight: 700; }
+    .sheet-logo-bar {
+      display: block; text-align: center;
+      background: #cc1111; color: #fff;
+      font-weight: 900; font-style: italic;
+      font-size: 20px; padding: 10px 20px;
+      margin: 6px 0 0 0; letter-spacing: 0.02em;
+    }
+
+    /* ── Combined table (照明・音響) ── */
+    .sheet-wrap { overflow-x: auto; margin-bottom: 16px; }
+    .output-table {
+      border-collapse: collapse; font-size: 12px;
+      background: #fff; color: #000; min-width: 100%;
+    }
+    .output-table th {
+      background: #f3f3f3; color: #000; font-weight: 600;
+      text-align: center; padding: 8px 12px;
+      border: 1px solid #b7b7b7; white-space: nowrap;
+    }
+    .output-table td {
+      padding: 8px 12px; border: 1px solid #d0d0d0;
+      text-align: center; vertical-align: middle;
+      background: #fff; color: #000; line-height: 1.5;
+    }
+    .output-table td.text-left { text-align: left; white-space: pre-line; }
+    .output-table tr.mc-row td { background: #f9f9f9; color: #999; font-style: italic; }
+    .output-table tr.note-row td {
+      background: #fffde7; color: #666; font-size: 11px; text-align: left;
+    }
+
+    /* ── Count table (セットリスト) ── */
+    .count-table {
+      border-collapse: collapse; font-size: 13px;
+      background: #fff; color: #000;
+      width: 100%; border: 2px solid #111;
+    }
+    .count-table thead tr { border-bottom: 2px solid #111; }
+    .count-table th {
+      font-style: italic; font-weight: 400;
+      text-align: center; padding: 10px 8px;
+      border: none; border-right: 1px solid #bbb;
+      background: #fff; color: #000; font-size: 12px;
+    }
+    .count-table th:last-child { border-right: none; }
+    .count-table td {
+      padding: 12px 8px; border: none;
+      border-bottom: 1px dashed #bbb;
+      border-right: 1px solid #bbb;
+      text-align: center; vertical-align: middle;
+      background: #fff; color: #000;
+    }
+    .count-table td:last-child { border-right: none; }
+    .count-table tr:last-child td { border-bottom: none; }
+    .count-table td.col-num {
+      width: 64px; font-weight: 400; font-size: 13px; color: #111;
+    }
+    .count-table td.col-song {
+      font-weight: 700; font-size: 16px;
+    }
+    .count-table td.col-count {
+      width: 72px; font-weight: 700; font-size: 13px;
+    }
+    .count-table tr.mc-row td {
+      font-weight: 700; font-size: 14px;
+      border-bottom: 1px dashed #bbb;
+    }
+
+    .total-time {
+      font-size: 12px; color: #555;
+      text-align: right; margin-bottom: 8px;
+    }
+    .actions-row {
+      display: flex; gap: 8px; margin-top: 12px;
+      flex-wrap: wrap; align-items: center;
+    }
+    .copy-msg {
+      font-size: 12px; color: #aaa;
+      opacity: 0; transition: opacity 0.3s;
+    }
+
+    .back-link {
+      display: inline-block; color: #555;
+      text-decoration: none; font-size: 13px; margin-bottom: 40px;
+    }
+    .back-link:hover { color: #fff; }
+
+    /* ── Print ── */
+    @media print {
+      nav, .input-area, .meta-area, #song-list,
+      .generate-area, .tab-nav, .actions-row,
+      .back-link, h2, section > div > p { display: none !important; }
+
+      body, section { background: #fff !important; padding: 0 !important; }
+      .tab-panel { display: none !important; }
+      .tab-panel.print-target { display: block !important; }
+      #output-section { display: block !important; }
+      .tool-container { max-width: 100% !important; padding: 16px; }
+
+      .output-table th, .output-table td { font-size: 11px; padding: 6px 10px; }
+      .sheet-logo-bar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html#hero">TOP</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#music">Music</a>
+    <a href="index.html#contact">Contact</a>
+    <a href="setlist.html">Setlist Tool</a>
+  </nav>
+
+  <section style="min-height: auto; padding-bottom: 120px;">
+    <div class="tool-container">
+      <a href="index.html" class="back-link">← Back to site</a>
+      <h2>Setlist Tool</h2>
+      <p>ライブ情報を入力し、曲を追加してシートを生成してください。</p>
+
+      <!-- ライブ情報 -->
+      <div class="meta-area" style="margin-top: 32px; display:flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
+        <div>
+          <span class="meta-label">日程</span>
+          <input type="date" id="live-date" />
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <span class="meta-label">会場</span>
+          <input type="text" id="live-venue" placeholder="会場名を入力..." style="width:100%;" />
+        </div>
+      </div>
+
+      <!-- 曲追加 -->
+      <div class="input-area">
+        <div class="input-row">
+          <input type="text" id="song-input" list="song-suggestions" placeholder="曲名を検索・入力..." autocomplete="off" />
+          <datalist id="song-suggestions"></datalist>
+          <button onclick="addSong()">追加</button>
+          <button class="secondary" onclick="addMC()">MC を挿入</button>
+        </div>
+      </div>
+
+      <ul id="song-list"></ul>
+
+      <div class="generate-area" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+        <button onclick="generateSheets()">シートを生成</button>
+        <button class="secondary" onclick="clearAll()">クリア</button>
+      </div>
+
+      <!-- Output -->
+      <div id="output-section" style="display:none;">
+        <div class="tab-nav">
+          <button class="tab-btn active" onclick="switchTab('combined', this)">照明・音響要望シート</button>
+          <button class="tab-btn" onclick="switchTab('count', this)">セットリスト</button>
+        </div>
+
+        <!-- 照明・音響要望シート -->
+        <div id="tab-combined" class="tab-panel active">
+          <div class="total-time" id="total-combined"></div>
+          <div class="print-sheet" id="sheet-combined"></div>
+          <div class="actions-row">
+            <button class="pdf-btn" onclick="printTab('combined')">PDFとして保存</button>
+            <button class="secondary" onclick="copySheet('combined')">テキストをコピー</button>
+            <span class="copy-msg" id="msg-combined"></span>
+          </div>
+        </div>
+
+        <!-- セットリスト -->
+        <div id="tab-count" class="tab-panel">
+          <div class="print-sheet" id="sheet-count"></div>
+          <div class="actions-row">
+            <button class="pdf-btn" onclick="printTab('count')">PDFとして保存</button>
+            <button class="secondary" onclick="copySheet('count')">テキストをコピー</button>
+            <span class="copy-msg" id="msg-count"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const SONG_DB = {
+      "September":                        { lighting: "（ドラム2カウントスタート）\nウォータースライダーのような",                          sound: "他の曲より爆リバーブで\n歌が埋まるように",                                              count: "2",      duration: "2:30" },
+      "She set under the bridge":         { lighting: "（ドラム4カウントスタート）\nきらきら水の照り返し",                                    sound: "-",                                                                                count: "-",      duration: "3:45" },
+      "I irk Saki.":                      { lighting: "（ドラム2カウントスタート）\n街と青空と",                                              sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "3:35" },
+      "Ivy in Navy Skirt":                { lighting: "（ドラム2カウントスタート）\n白い感じの晴れ",                                          sound: "-",                                                                                count: "2",      duration: "4:00" },
+      "She died under the bridge":        { lighting: "（バッキングのみ→２周でオールイン）\nきらきら夏の記憶の照り返し、多幸感",              sound: "（ドラムコーラスあり）",                                                            count: "guitar", duration: "4:30" },
+      "plasticsummertime":                { lighting: "（ドラム4カウントスタート）\n寂しく",                                                  sound: "-",                                                                                count: "-",      duration: "2:30" },
+      "Ice box":                          { lighting: "（ドラム4カウントスタート）\nアイススケートの照り返し",                                sound: "-",                                                                                count: "-",      duration: "3:30" },
+      "For Jules":                        { lighting: "（ドラム2カウントスタート）\n海のこと",                                                sound: "-",                                                                                count: "2",      duration: "3:30" },
+      "marble":                           { lighting: "（ドラム4カウントスタート）\n眩しく、逆光",                                            sound: "-",                                                                                count: "-",      duration: "3:30" },
+      "MIRROR'S EDGE":                    { lighting: "（ドラム2カウントスタート）\n屋上のアスファルトと照り返す太陽",                        sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "3:10" },
+      "IKAROS":                           { lighting: "（ドラムのみでスタート→ハイハット4カウントでオールイン）\n空と疾走感",                sound: "-",                                                                                count: "drums",  duration: "3:30" },
+      "Guernica":                         { lighting: "（ドラム4カウントスタート）\n防波堤のこと",                                            sound: "-",                                                                                count: "-",      duration: "2:15" },
+      "SugarCrash":                       { lighting: "（ドラム4カウントスタート）\nキラキラ眩しい二日酔い、白ベース",                        sound: "-",                                                                                count: "-",      duration: "3:40" },
+      "wallflower":                       { lighting: "（ドラム2カウントスタート）\n草原と風車と広い空",                                      sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "4:30" },
+      "Ghost Dream":                      { lighting: "（ボーカル二人のみスタート→ドラムの４連からオールイン）\n灰と虹と",                    sound: "-",                                                                                count: "-",      duration: "2:40" },
+      "end roll":                         { lighting: "-",                                                                                    sound: "-",                                                                                count: "-",      duration: "-"    },
+      "Light":                            { lighting: "-",                                                                                    sound: "-",                                                                                count: "-",      duration: "2:00" },
+      "Enrique":                          { lighting: "深く深く",                                                                             sound: "（ドラムコーラスあり）\n他の曲より超爆リバーブ\n歌が埋まるように\n音量上げるイメージ", count: "-",      duration: "4:00" },
+      "Portraits":                        { lighting: "（４カウントスタート）\nフェリーの上から飛行機雲を眺めて",                              sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "2:00" },
+      "Raindrops/Sunny-side Up":          { lighting: "（４カウントスタート）\nお天気雨",                                                     sound: "-",                                                                                count: "-",      duration: "4:10" },
+      "BALLOON DOG":                      { lighting: "（スネア4発後、オールイン）\n晴れ渡った教会近くで\n2人愛を誓っていようね",             sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "4:10" },
+      "RABBIT FIRE!!":                    { lighting: "（ドラム2カウントスタート）\nスピード感のあるような。ハイパーポップ。赤・オレンジ系",  sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "2:10" },
+      "NIDHOGG":                          { lighting: "（ドラム4カウントスタート）\n全体的に涼しい昼間のような、サビはグランジな雰囲気で",    sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "2:50" },
+      "SUNNY DEAD YOUTH":                 { lighting: "（ドラムの合図ですぐオールイン）\n前半は眩しめに 後半にかけて夏が終わるような",        sound: "-",                                                                                count: "-",      duration: "3:55" },
+      "↑POINT OF VIEW↓":                 { lighting: "（ドラム4カウントスタート）\nキラキラとまぶしく、ひんやりと走り抜ける",                sound: "-",                                                                                count: "-",      duration: "3:15" },
+      "WATER PARK":                       { lighting: "（ドラムフレーズ2周でオールイン）\nオールインで一気に眩しく！ 眩しめでお願いします。",  sound: "サビのシンバルをハイ立ち良く",                                                      count: "drums",  duration: "3:15" },
+      "SLOWDIVE":                         { lighting: "（ドラムの合図ですぐオールイン）\nざらついた空気",                                      sound: "-",                                                                                count: "-",      duration: "3:20" },
+      "MY ANGEL":                         { lighting: "（ギターリフからスタート）\n軽やかに、夏の雨上がり",                                    sound: "-",                                                                                count: "guitar", duration: "3:30" },
+      "SUNDAY DIVER":                     { lighting: "（ドラム2カウントスタート）\n屋内プールに飛びこむような解放感と疾走感",                sound: "-",                                                                                count: "2",      duration: "4:05" },
+      "BANANA FISH":                      { lighting: "（ドラム4カウントスタート）\n風通しの良い、その隙間で生まれる陽炎",                    sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "5:35" },
+      "Salinger's Choice":                { lighting: "-",                                                                                    sound: "-",                                                                                count: "-",      duration: "3:47" },
+      "The Song That Plays When You Die": { lighting: "-",                                                                                    sound: "-",                                                                                count: "-",      duration: "2:12" },
+    };
+
+    const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
+
+    let items = [];
+    let dragSrc = null;
+
+    // Populate datalist
+    const dl = document.getElementById('song-suggestions');
+    Object.keys(SONG_DB).sort().forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      dl.appendChild(opt);
+    });
+
+    document.getElementById('song-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addSong();
+    });
+
+    // ── List management ──────────────────────────────────────────────────
+
+    function addSong() {
+      const input = document.getElementById('song-input');
+      const name = input.value.trim();
+      if (!name) return;
+      if (items.some(i => i.type === 'song' && i.name === name)) {
+        input.select();
+        input.style.borderColor = '#cc1111';
+        setTimeout(() => { input.style.borderColor = ''; }, 1200);
+        return;
+      }
+      items.push({ type: 'song', name });
+      input.value = '';
+      input.focus();
+      renderList();
+    }
+
+    function addMC() {
+      items.push({ type: 'mc', name: 'MC' });
+      renderList();
+    }
+
+    function removeItem(i) {
+      items.splice(i, 1);
+      renderList();
+    }
+
+    function renderList() {
+      const list = document.getElementById('song-list');
+      list.innerHTML = '';
+      let songCount = 0;
+      items.forEach((item, i) => {
+        const isMC = item.type === 'mc';
+        if (!isMC) songCount++;
+        const data = (!isMC && SONG_DB[item.name]) || {};
+        const li = document.createElement('li');
+        if (isMC) li.classList.add('mc-row');
+        li.draggable = true;
+        li.dataset.index = i;
+        const meta = (!isMC && data.duration) ? data.duration : '';
+        const inDB = !isMC && !!SONG_DB[item.name];
+        li.innerHTML = `
+          <span class="song-num">${isMC ? 'MC' : songCount + '.'}</span>
+          <span class="song-name">${escapeHtml(item.name)}${!inDB && !isMC ? ' <span style="color:#555;font-size:11px;">（DBになし）</span>' : ''}</span>
+          ${meta ? `<span class="song-meta">${meta}</span>` : ''}
+          <button class="remove-btn" onclick="removeItem(${i})">×</button>
+        `;
+        li.addEventListener('dragstart', onDragStart);
+        li.addEventListener('dragover',  onDragOver);
+        li.addEventListener('dragleave', onDragLeave);
+        li.addEventListener('drop',      onDrop);
+        li.addEventListener('dragend',   onDragEnd);
+        list.appendChild(li);
+      });
+    }
+
+    function onDragStart(e) { dragSrc = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+    function onDragOver(e)  { e.preventDefault(); this.classList.add('drag-over'); }
+    function onDragLeave()  { this.classList.remove('drag-over'); }
+    function onDrop(e) {
+      e.preventDefault();
+      if (dragSrc === this) return;
+      const from = parseInt(dragSrc.dataset.index);
+      const to   = parseInt(this.dataset.index);
+      const moved = items.splice(from, 1)[0];
+      items.splice(to, 0, moved);
+      renderList();
+    }
+    function onDragEnd() {
+      document.querySelectorAll('#song-list li').forEach(li => li.classList.remove('dragging', 'drag-over'));
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+
+    function parseDuration(dur) {
+      if (!dur || dur === '-') return 0;
+      const parts = dur.trim().split(':');
+      return parts.length === 2 ? (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0) : 0;
+    }
+
+    function formatDuration(sec) {
+      return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    }
+
+    function formatDateDisplay(isoDate) {
+      if (!isoDate) return '';
+      const d = new Date(isoDate + 'T00:00:00');
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const wd = WEEKDAY_JA[d.getDay()];
+      return `${y}/${m}/${day}（${wd}）`;
+    }
+
+    function buildHeader() {
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      const dateStr  = dateVal  ? formatDateDisplay(dateVal) : '';
+      const venueStr = venueVal ? `@ ${venueVal}` : '';
+      return `
+        <div class="sheet-meta">
+          ${dateStr  ? `<div class="sheet-meta-date">${escapeHtml(dateStr)}</div>`  : ''}
+          ${venueStr ? `<div class="sheet-meta-venue">${escapeHtml(venueStr)}</div>` : ''}
+        </div>
+        <div class="sheet-logo-bar">MoritaSaki in the pool</div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Generate ─────────────────────────────────────────────────────────
+
+    function generateSheets() {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      renderCombined();
+      renderCount();
+      const out = document.getElementById('output-section');
+      out.style.display = 'block';
+      out.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderCombined() {
+      let songCount = 0, totalSec = 0, rows = '';
+      items.forEach(item => {
+        if (item.type === 'mc') {
+          rows += `<tr class="mc-row"><td></td><td>MC</td><td>-</td><td>-</td><td>00:00</td></tr>`;
+          return;
+        }
+        songCount++;
+        const d = SONG_DB[item.name] || {};
+        const dur = d.duration || '-';
+        totalSec += parseDuration(dur);
+        rows += `<tr>
+          <td>${songCount}.</td>
+          <td>${escapeHtml(item.name)}</td>
+          <td class="text-left">${escapeHtml(d.lighting || '-')}</td>
+          <td class="text-left">${escapeHtml(d.sound    || '-')}</td>
+          <td>${escapeHtml(dur)}</td>
+        </tr>`;
+      });
+      rows += `<tr class="note-row"><td></td><td></td><td>※全曲ストロボは無しでお願いします</td><td></td><td></td></tr>`;
+
+      document.getElementById('total-combined').textContent = `合計時間（曲のみ）: ${formatDuration(totalSec)}`;
+      document.getElementById('sheet-combined').innerHTML = buildHeader() + `
+        <div class="sheet-wrap">
+          <table class="output-table">
+            <thead><tr>
+              <th>曲順</th><th>曲名</th><th>照明要望</th><th>音響要望</th><th>所要時間(m:s)</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderCount() {
+      let songCount = 0, rows = '';
+      items.forEach(item => {
+        if (item.type === 'mc') {
+          rows += `<tr class="mc-row">
+            <td class="col-num"></td>
+            <td class="col-song">MC</td>
+            <td class="col-count"></td>
+          </tr>`;
+          return;
+        }
+        songCount++;
+        const d = SONG_DB[item.name] || {};
+        const count = d.count && d.count !== '-' ? d.count : '';
+        rows += `<tr>
+          <td class="col-num">${songCount}.</td>
+          <td class="col-song">${escapeHtml(item.name)}</td>
+          <td class="col-count">${escapeHtml(count)}</td>
+        </tr>`;
+      });
+
+      document.getElementById('sheet-count').innerHTML = buildHeader() + `
+        <div class="sheet-wrap" style="margin-top:0;">
+          <table class="count-table">
+            <thead><tr>
+              <th style="width:64px;">number</th>
+              <th>songs</th>
+              <th style="width:72px;">count</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ── Tabs ─────────────────────────────────────────────────────────────
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ── PDF print ────────────────────────────────────────────────────────
+
+    function printTab(tab) {
+      const sheetEl = document.getElementById('sheet-' + tab);
+      const totalEl = document.getElementById('total-combined');
+      const totalHtml = (tab === 'combined' && totalEl) ? `<div style="font-size:12px;color:#555;text-align:right;margin-bottom:6px;">${totalEl.textContent}</div>` : '';
+
+      const win = window.open('', '_blank', 'width=900,height=700');
+      win.document.write(`<!DOCTYPE html><html lang="ja"><head>
+        <meta charset="UTF-8"/>
+        <title></title>
+        <style>
+          * { margin:0; padding:0; box-sizing:border-box; }
+          body { font-family: Arial, sans-serif; background:#fff; color:#000; padding:24px; }
+          .sheet-meta { text-align:center; margin-bottom:2px; }
+          .sheet-meta-date  { font-size:16px; color:#111; padding:4px 0; font-weight:700; }
+          .sheet-meta-venue { font-size:16px; color:#111; padding:2px 0; font-weight:700; }
+          .sheet-logo-bar {
+            display:block; text-align:center; background:#cc1111; color:#fff;
+            font-weight:900; font-style:italic; font-size:20px;
+            padding:10px 20px; margin:6px 0 0 0; letter-spacing:0.02em;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .output-table { border-collapse:collapse; width:100%; font-size:12px; }
+          .output-table th {
+            background:#f3f3f3; font-weight:600; text-align:center;
+            padding:8px 10px; border:1px solid #b7b7b7;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .output-table td { padding:7px 10px; border:1px solid #d0d0d0; text-align:center; vertical-align:middle; line-height:1.5; }
+          .output-table td.text-left { text-align:left; white-space:pre-line; }
+          .output-table tr.mc-row td { background:#f9f9f9; color:#999; font-style:italic; }
+          .output-table tr.note-row td { background:#fffde7; color:#666; font-size:11px; text-align:left; }
+          .count-table { border-collapse:collapse; width:100%; font-size:13px; border:2px solid #111; }
+          .count-table thead tr { border-bottom:2px solid #111; }
+          .count-table th { font-style:italic; font-weight:400; text-align:center; padding:10px 8px; border:none; border-right:1px solid #bbb; font-size:12px; }
+          .count-table th:last-child { border-right:none; }
+          .count-table td { padding:12px 8px; border:none; border-bottom:1px dashed #bbb; border-right:1px solid #bbb; text-align:center; vertical-align:middle; }
+          .count-table td:last-child { border-right:none; }
+          .count-table tr:last-child td { border-bottom:none; }
+          .count-table td.col-num   { width:64px; font-weight:400; font-size:13px; }
+          .count-table td.col-song  { font-weight:700; font-size:16px; }
+          .count-table td.col-count { width:72px; font-weight:700; font-size:13px; }
+          .count-table tr.mc-row td { font-weight:700; font-size:14px; border-bottom:1px dashed #bbb; }
+          @page { margin:15mm; }
+        </style>
+      </head><body>
+        ${totalHtml}
+        ${sheetEl.innerHTML}
+      </body></html>`);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); }, 400);
+    }
+
+    // ── Copy text ────────────────────────────────────────────────────────
+
+    function copySheet(tab) {
+      const sheetEl = document.getElementById('sheet-' + tab);
+      const titles  = { combined: '照明・音響要望シート', count: 'セットリスト' };
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+
+      let text = `【MoritaSaki in the pool ${titles[tab]}】\n`;
+      if (dateVal)  text += formatDateDisplay(dateVal) + '\n';
+      if (venueVal) text += `@ ${venueVal}\n`;
+      text += '\n';
+
+      const headers = sheetEl.querySelectorAll('thead th');
+      text += Array.from(headers).map(h => h.textContent.trim()).join('\t') + '\n';
+      sheetEl.querySelectorAll('tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        text += Array.from(cells).map(c => c.textContent.trim().replace(/\n/g,' ')).join('\t') + '\n';
+      });
+
+      const totalEl = document.getElementById('total-combined');
+      if (tab === 'combined' && totalEl) text += '\n' + totalEl.textContent.trim();
+
+      navigator.clipboard.writeText(text).then(() => {
+        const msg = document.getElementById('msg-' + tab);
+        if (!msg) return;
+        msg.textContent = 'コピーしました';
+        msg.style.opacity = '1';
+        setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+      });
+    }
+
+    // ── Clear ────────────────────────────────────────────────────────────
+
+    function clearAll() {
+      if (items.length === 0) return;
+      if (!confirm('リストをクリアしますか？')) return;
+      items = [];
+      renderList();
+      document.getElementById('output-section').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>
