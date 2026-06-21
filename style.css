@@ -217,6 +217,48 @@ th {
   color: #aaa;
 }
 
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  nav {
+    padding: 12px 20px;
+    gap: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+
+  nav a { font-size: 12px; white-space: nowrap; }
+
+  section { padding: 80px 24px 60px; }
+
+  h1 { font-size: 36px; }
+  h2 { font-size: 26px; margin-bottom: 32px; }
+  h3 { font-size: 17px; }
+
+  .member-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .music-links { flex-direction: column; }
+  .music-links a { text-align: center; }
+
+  table { font-size: 12px; }
+  th, td { padding: 8px 10px; }
+
+  .sns-links a { font-size: 14px; }
+
+  p { font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 28px; }
+  .member-grid { grid-template-columns: 1fr; }
+  .member-card { padding: 16px; }
+}
+
 /* Setlist Tool Link */
 .tool-link {
   display: inline-block;
