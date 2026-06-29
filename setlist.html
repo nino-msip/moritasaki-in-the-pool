@@ -274,9 +274,30 @@
             <span class="copy-msg" id="msg-count"></span>
           </div>
         </div>
+
+        <!-- MP3 ダウンロード -->
+        <div id="mp3-section" style="margin-top:40px; border-top:1px solid #222; padding-top:32px;">
+          <p style="color:#555; font-size:13px; margin-bottom:16px;">🔒 スタッフ用 — 音源ファイルのダウンロード</p>
+          <div id="mp3-auth">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <input type="password" id="mp3-pw" placeholder="パスワードを入力..." style="flex:1; min-width:200px;" onkeydown="if(event.key==='Enter')checkMp3Password()" />
+              <button onclick="checkMp3Password()">確認</button>
+            </div>
+            <p id="mp3-pw-error" style="color:#cc1111; font-size:12px; margin-top:8px; display:none;">パスワードが違います</p>
+          </div>
+          <div id="mp3-download" style="display:none;">
+            <p style="color:#aaa; font-size:12px; margin-bottom:12px;">セットリストの曲をZIPでダウンロードします</p>
+            <div class="actions-row">
+              <button class="pdf-btn" onclick="downloadMp3Zip()">MP3をまとめてダウンロード</button>
+              <span id="mp3-status" style="font-size:12px; color:#aaa;"></span>
+            </div>
+            <ul id="mp3-file-list" style="margin-top:16px; list-style:none; padding:0; font-size:12px; color:#555;"></ul>
+          </div>
+        </div>
       </div>
     </div>
   </section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <script>
     const SONG_DB = {
@@ -628,6 +649,117 @@
         msg.style.opacity = '1';
         setTimeout(() => { msg.style.opacity = '0'; }, 2000);
       });
+    }
+
+    // ── MP3 Download ─────────────────────────────────────────────────────
+
+    const MP3_PW_HASH = '2e3e77537bf9c7aa6db5f69625c40f5a125cb119032cb5db1683f7e0f946a3e3';
+
+    const SONG_FILE = {
+      "September":                        "September.mp3",
+      "She set under the bridge":         "She_set_under_the_bridge.mp3",
+      "I irk Saki.":                      "I_irk_Saki.mp3",
+      "Ivy in Navy Skirt":                "Ivy_in_Navy_Skirt.mp3",
+      "She died under the bridge":        "She_died_under_the_bridge.mp3",
+      "plasticsummertime":                "plasticsummertime.mp3",
+      "Ice box":                          "Ice_box.mp3",
+      "For Jules":                        "For_Jules.mp3",
+      "marble":                           "marble.mp3",
+      "MIRROR'S EDGE":                    "MIRRORS_EDGE.mp3",
+      "IKAROS":                           "IKAROS.mp3",
+      "Guernica":                         "Guernica.mp3",
+      "SugarCrash":                       "SugarCrash.mp3",
+      "wallflower":                       "wallflower.mp3",
+      "Ghost Dream":                      "Ghost_Dream.mp3",
+      "end roll":                         "end_roll.mp3",
+      "Light":                            "Light.mp3",
+      "Enrique":                          "Enrique.mp3",
+      "Portraits":                        "Portraits.mp3",
+      "Raindrops/Sunny-side Up":          "Raindrops_Sunny-side_Up.mp3",
+      "BALLOON DOG":                      "BALLOON_DOG.mp3",
+      "RABBIT FIRE!!":                    "RABBIT_FIRE.mp3",
+      "NIDHOGG":                          "NIDHOGG.mp3",
+      "SUNNY DEAD YOUTH":                 "SUNNY_DEAD_YOUTH.mp3",
+      "↑POINT OF VIEW↓":                 "POINT_OF_VIEW.mp3",
+      "WATER PARK":                       "WATER_PARK.mp3",
+      "SLOWDIVE":                         "SLOWDIVE.mp3",
+      "MY ANGEL":                         "MY_ANGEL.mp3",
+      "SUNDAY DIVER":                     "SUNDAY_DIVER.mp3",
+      "BANANA FISH":                      "BANANA_FISH.mp3",
+      "Salinger's Choice":                "Salingers_Choice.mp3",
+      "The Song That Plays When You Die": "The_Song_That_Plays_When_You_Die.mp3",
+    };
+
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function checkMp3Password() {
+      const pw = document.getElementById('mp3-pw').value;
+      const hash = await sha256(pw);
+      if (hash === MP3_PW_HASH) {
+        document.getElementById('mp3-auth').style.display = 'none';
+        document.getElementById('mp3-download').style.display = 'block';
+        renderMp3List();
+      } else {
+        document.getElementById('mp3-pw-error').style.display = 'block';
+      }
+    }
+
+    function renderMp3List() {
+      const ul = document.getElementById('mp3-file-list');
+      ul.innerHTML = '';
+      const songs = items.filter(i => i.type === 'song');
+      songs.forEach(item => {
+        const file = SONG_FILE[item.name];
+        const li = document.createElement('li');
+        li.style.padding = '4px 0';
+        li.style.borderBottom = '1px solid #111';
+        if (file) {
+          li.textContent = `✓ ${item.name}  →  sounds/${file}`;
+        } else {
+          li.textContent = `✗ ${item.name}  （ファイル未登録）`;
+          li.style.color = '#333';
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    async function downloadMp3Zip() {
+      const songs = items.filter(i => i.type === 'song' && SONG_FILE[i.name]);
+      if (songs.length === 0) { alert('ダウンロード可能な曲がありません'); return; }
+
+      const status = document.getElementById('mp3-status');
+      status.textContent = '準備中...';
+
+      const zip = new JSZip();
+      const folder = zip.folder('setlist_mp3');
+      let loaded = 0;
+
+      for (const item of songs) {
+        const filename = SONG_FILE[item.name];
+        try {
+          const res = await fetch(`sounds/${filename}`);
+          if (!res.ok) throw new Error(`not found: ${filename}`);
+          const blob = await res.blob();
+          folder.file(filename, blob);
+          loaded++;
+          status.textContent = `読み込み中... ${loaded}/${songs.length}`;
+        } catch {
+          status.textContent = `⚠ ${filename} が見つかりません`;
+        }
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      const dateVal = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      const label = [dateVal, venueVal].filter(Boolean).join('_') || 'setlist';
+      a.download = `${label}_mp3.zip`;
+      a.click();
+      status.textContent = 'ダウンロード完了';
     }
 
     // ── Clear ────────────────────────────────────────────────────────────
