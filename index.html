@@ -138,6 +138,13 @@
     return u && /^https?:\/\//.test(u.trim()) ? u.trim() : null;
   }
 
+  // Google Drive の共有URLからファイルIDを抽出
+  function driveFileId(u) {
+    if (!u) return null;
+    const m = String(u).match(/[?&]id=([\w-]+)|\/d\/([\w-]+)/);
+    return m ? (m[1] || m[2]) : null;
+  }
+
   // "2026.08.01" "2026/8/1" "2026-08-01" などを Date に変換
   function parseEventDate(s) {
     if (!s) return null;
@@ -193,12 +200,22 @@
     const venue = esc(e['会場'] || '');
     const city = esc(e['都市'] || '');
     const notes = esc(e['備考'] || '');
+    const performers = esc(e['共演者'] || '');
+
+    const flyerId = driveFileId(e['フライヤー'] || '');
+    const flyerCell = flyerId
+      ? `<a href="https://drive.google.com/file/d/${esc(flyerId)}/view" target="_blank" rel="noopener">
+           <img class="live-flyer" src="https://drive.google.com/thumbnail?id=${esc(flyerId)}&sz=w200" alt="flyer" loading="lazy" />
+         </a>`
+      : '';
 
     return `
       <tr>
+        <td class="live-flyer-cell">${flyerCell}</td>
         <td class="live-date">${date}</td>
         <td>
           ${title ? `<div class="live-title">${title}</div>` : ''}
+          ${performers ? `<div class="live-performers">w/ ${performers}</div>` : ''}
           ${notes ? `<div class="live-notes">${notes}</div>` : ''}
         </td>
         <td class="live-venue">${venue}${city ? ' <span class="live-city">/ ' + city + '</span>' : ''}</td>
@@ -258,7 +275,7 @@
         <div class="live-table-wrap">
           <table class="live-table">
             <thead>
-              <tr><th>Date</th><th>Event</th><th>Venue</th><th>Ticket</th></tr>
+              <tr><th></th><th>Date</th><th>Event</th><th>Venue</th><th>Ticket</th></tr>
             </thead>
             <tbody>${events.map(renderEvent).join('')}</tbody>
           </table>
