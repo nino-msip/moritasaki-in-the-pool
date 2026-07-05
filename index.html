@@ -138,6 +138,22 @@
     return u && /^https?:\/\//.test(u.trim()) ? u.trim() : null;
   }
 
+  // "2026.08.01" "2026/8/1" "2026-08-01" などを Date に変換
+  function parseEventDate(s) {
+    if (!s) return null;
+    const m = String(s).trim().match(/(\d{4})[./\-年](\d{1,2})[./\-月](\d{1,2})/);
+    if (!m) return null;
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return isNaN(d) ? null : d;
+  }
+
+  function formatDateJa(s) {
+    const d = parseEventDate(s);
+    if (!d) return s;
+    const wd = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}（${wd}）`;
+  }
+
   function parseCSV(text) {
     const rows = [];
     let row = [], cell = '', inQ = false;
@@ -168,7 +184,7 @@
     if (eplus) tickets.push(`<a href="${esc(eplus)}" target="_blank" rel="noopener" class="ticket-btn">e+</a>`);
     if (lp) tickets.push(`<a href="${esc(lp)}" target="_blank" rel="noopener" class="ticket-btn">LivePocket</a>`);
 
-    const date = esc(e['日付'] || '');
+    const date = esc(formatDateJa(e['日付'] || ''));
     const title = esc(e['タイトル'] || '');
     const venue = esc(e['会場'] || '');
     const city = esc(e['都市'] || '');
@@ -204,16 +220,37 @@
         return;
       }
       const headers = rows[0].map(h => h.trim());
-      const events = rows.slice(1).filter(r => r.some(c => c.trim()));
+      let events = rows.slice(1)
+        .filter(r => r.some(c => c.trim()))
+        .map(row => {
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
+          return obj;
+        });
+
+      // 過去のライブを非表示（今日のライブは表示）
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      events = events.filter(e => {
+        const d = parseEventDate(e['日付']);
+        return !d || d >= today;
+      });
+
+      // 日付の近い順に並べる（日付不明は最後）
+      events.sort((a, b) => {
+        const da = parseEventDate(a['日付']);
+        const db = parseEventDate(b['日付']);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da - db;
+      });
+
       if (!events.length) {
         container.innerHTML = '<p class="live-empty">現在ライブの予定はありません。</p>';
         return;
       }
-      container.innerHTML = events.map(row => {
-        const obj = {};
-        headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
-        return renderEvent(obj);
-      }).join('');
+      container.innerHTML = events.map(renderEvent).join('');
     } catch {
       container.innerHTML = '<p class="live-empty">ライブ情報の取得に失敗しました。</p>';
     }
