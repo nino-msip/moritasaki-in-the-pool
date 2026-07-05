@@ -184,6 +184,10 @@
     if (eplus) tickets.push(`<a href="${esc(eplus)}" target="_blank" rel="noopener" class="ticket-btn">e+</a>`);
     if (lp) tickets.push(`<a href="${esc(lp)}" target="_blank" rel="noopener" class="ticket-btn">LivePocket</a>`);
 
+    const otherUrl = safeUrl(e['その他チケットURL']);
+    const otherName = (e['その他チケット名'] || '').trim();
+    if (otherUrl) tickets.push(`<a href="${esc(otherUrl)}" target="_blank" rel="noopener" class="ticket-btn">${esc(otherName || 'Ticket')}</a>`);
+
     const date = esc(formatDateJa(e['日付'] || ''));
     const title = esc(e['タイトル'] || '');
     const venue = esc(e['会場'] || '');
