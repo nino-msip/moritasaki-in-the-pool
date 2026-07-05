@@ -36,6 +36,15 @@ nav a:hover {
   color: #aaa;
 }
 
+.site-ver {
+  margin-left: auto;
+  font-size: 11px;
+  color: #444;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  align-self: center;
+}
+
 /* Sections */
 section {
   min-height: 100vh;

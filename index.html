@@ -15,6 +15,7 @@
     <a href="#goods">Goods</a>
     <a href="#contact">Contact</a>
     <a href="setlist.html">Setlist Tool</a>
+    <span id="site-ver" class="site-ver"></span>
   </nav>
 
   <!-- Hero -->
@@ -300,6 +301,20 @@
   }
 
   loadLiveSchedule();
+
+  // ── サイトバージョン（最新コミット日時から自動生成）──
+  async function loadVersion() {
+    try {
+      const res = await fetch('https://api.github.com/repos/nino-msip/moritasaki-in-the-pool/commits/main');
+      if (!res.ok) return;
+      const data = await res.json();
+      const d = new Date(data.commit.committer.date);
+      const pad = n => String(n).padStart(2, '0');
+      const ver = `ver ${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}`;
+      document.getElementById('site-ver').textContent = ver;
+    } catch {}
+  }
+  loadVersion();
 </script>
 </body>
 </html>
