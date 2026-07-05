@@ -106,6 +106,13 @@
       font-size: 28px; padding: 22px 20px;
       margin: 10px 0 0 0; letter-spacing: 0.02em;
     }
+    .sheet-logo-img {
+      display: block;
+      width: 100%;
+      max-height: 120px;
+      object-fit: contain;
+      margin: 10px 0 0 0;
+    }
 
     /* ── Combined table (照明・音響) ── */
     .sheet-wrap { overflow-x: auto; margin-bottom: 16px; }
@@ -457,12 +464,14 @@
       const venueVal = document.getElementById('live-venue').value.trim();
       const dateStr  = dateVal  ? formatDateDisplay(dateVal) : '';
       const venueStr = venueVal ? `@ ${venueVal}` : '';
+      const logoUrl = new URL('logo.png', document.baseURI).href;
       return `
         <div class="sheet-meta">
           ${dateStr  ? `<div class="sheet-meta-date">${escapeHtml(dateStr)}</div>`  : ''}
           ${venueStr ? `<div class="sheet-meta-venue">${escapeHtml(venueStr)}</div>` : ''}
         </div>
-        <div class="sheet-logo-bar">MoritaSaki in the pool</div>
+        <img class="sheet-logo-img" src="${logoUrl}" alt="MoritaSaki in the pool"
+             onerror="this.outerHTML='&lt;div class=&quot;sheet-logo-bar&quot;&gt;MoritaSaki in the pool&lt;/div&gt;'" />
       `;
     }
 
@@ -583,6 +592,11 @@
             display:block; text-align:center; background:#cc1111; color:#fff;
             font-weight:900; font-style:italic; font-size:28px;
             padding:22px 20px; margin:10px 0 0 0; letter-spacing:0.02em;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .sheet-logo-img {
+            display:block; width:100%; max-height:120px;
+            object-fit:contain; margin:10px 0 0 0;
             print-color-adjust:exact; -webkit-print-color-adjust:exact;
           }
           .output-table { border-collapse:collapse; width:100%; font-size:12px; }
