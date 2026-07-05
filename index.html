@@ -93,8 +93,8 @@
     </div>
 
     <h3>Live Schedule</h3>
-    <div class="music-links">
-      <a href="https://linktr.ee/liveschedule_moritasaki" target="_blank">ライブスケジュールを確認する →</a>
+    <div id="live-list" class="live-list">
+      <p class="live-loading">Loading...</p>
     </div>
   </section>
 
@@ -120,5 +120,106 @@
     <p>お問い合わせ・オファー: <a href="mailto:mitp@vinyl-junkie.com" style="color:#fff;">mitp@vinyl-junkie.com</a></p>
   </section>
 
+
+<script>
+  // ★ GoogleスプレッドシートをCSVで公開したURLをここに貼る
+  // 手順: スプレッドシート → ファイル → 共有 → ウェブに公開 → CSV → URLをコピー
+  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTBU3fniYvhEvFTq2Le3HzDHWzuyrh0nlVZgniNIg-2vDU1CWDxXqXTZvcTR6Nn58ucQ6Ej7nih8Wwj/pub?output=csv';
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function safeUrl(u) {
+    return u && /^https?:\/\//.test(u.trim()) ? u.trim() : null;
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], cell = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') {
+        if (inQ && text[i + 1] === '"') { cell += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === ',' && !inQ) {
+        row.push(cell); cell = '';
+      } else if ((c === '\n' || c === '\r') && !inQ) {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(cell); rows.push(row); row = []; cell = '';
+      } else {
+        cell += c;
+      }
+    }
+    if (row.length || cell) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  function renderEvent(e) {
+    const tickets = [];
+    const zaiko = safeUrl(e['Zaiko']);
+    const eplus = safeUrl(e['e+']);
+    const lp = safeUrl(e['ライブポケット']);
+    if (zaiko) tickets.push(`<a href="${esc(zaiko)}" target="_blank" rel="noopener" class="ticket-btn">Zaiko</a>`);
+    if (eplus) tickets.push(`<a href="${esc(eplus)}" target="_blank" rel="noopener" class="ticket-btn">e+</a>`);
+    if (lp) tickets.push(`<a href="${esc(lp)}" target="_blank" rel="noopener" class="ticket-btn">LivePocket</a>`);
+
+    const date = esc(e['日付'] || '');
+    const title = esc(e['タイトル'] || '');
+    const venue = esc(e['会場'] || '');
+    const city = esc(e['都市'] || '');
+    const notes = esc(e['備考'] || '');
+
+    return `
+      <div class="live-card">
+        <div class="live-date">${date}</div>
+        <div class="live-info">
+          ${title ? `<div class="live-title">${title}</div>` : ''}
+          <div class="live-venue">${venue}${city ? ' <span class="live-city">/ ' + city + '</span>' : ''}</div>
+          ${notes ? `<div class="live-notes">${notes}</div>` : ''}
+        </div>
+        <div class="live-tickets">
+          ${tickets.length ? tickets.join('') : '<span class="live-tba">チケット準備中</span>'}
+        </div>
+      </div>`;
+  }
+
+  async function loadLiveSchedule() {
+    const container = document.getElementById('live-list');
+    if (!SHEET_CSV_URL) {
+      container.innerHTML = '<p class="live-empty">スプレッドシートURLが未設定です。</p>';
+      return;
+    }
+    try {
+      const res = await fetch(SHEET_CSV_URL);
+      if (!res.ok) throw new Error('fetch failed');
+      const text = await res.text();
+      const rows = parseCSV(text).filter(r => r.some(c => c.trim()));
+      if (rows.length < 2) {
+        container.innerHTML = '<p class="live-empty">現在ライブの予定はありません。</p>';
+        return;
+      }
+      const headers = rows[0].map(h => h.trim());
+      const events = rows.slice(1).filter(r => r.some(c => c.trim()));
+      if (!events.length) {
+        container.innerHTML = '<p class="live-empty">現在ライブの予定はありません。</p>';
+        return;
+      }
+      container.innerHTML = events.map(row => {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
+        return renderEvent(obj);
+      }).join('');
+    } catch {
+      container.innerHTML = '<p class="live-empty">ライブ情報の取得に失敗しました。</p>';
+    }
+  }
+
+  loadLiveSchedule();
+</script>
 </body>
 </html>
