@@ -195,17 +195,17 @@
     const notes = esc(e['備考'] || '');
 
     return `
-      <div class="live-card">
-        <div class="live-date">${date}</div>
-        <div class="live-info">
+      <tr>
+        <td class="live-date">${date}</td>
+        <td>
           ${title ? `<div class="live-title">${title}</div>` : ''}
-          <div class="live-venue">${venue}${city ? ' <span class="live-city">/ ' + city + '</span>' : ''}</div>
           ${notes ? `<div class="live-notes">${notes}</div>` : ''}
-        </div>
-        <div class="live-tickets">
-          ${tickets.length ? tickets.join('') : '<span class="live-tba">チケット準備中</span>'}
-        </div>
-      </div>`;
+        </td>
+        <td class="live-venue">${venue}${city ? ' <span class="live-city">/ ' + city + '</span>' : ''}</td>
+        <td class="live-tickets-cell">
+          ${tickets.length ? tickets.join(' ') : '<span class="live-tba">準備中</span>'}
+        </td>
+      </tr>`;
   }
 
   async function loadLiveSchedule() {
@@ -254,7 +254,15 @@
         container.innerHTML = '<p class="live-empty">現在ライブの予定はありません。</p>';
         return;
       }
-      container.innerHTML = events.map(renderEvent).join('');
+      container.innerHTML = `
+        <div class="live-table-wrap">
+          <table class="live-table">
+            <thead>
+              <tr><th>Date</th><th>Event</th><th>Venue</th><th>Ticket</th></tr>
+            </thead>
+            <tbody>${events.map(renderEvent).join('')}</tbody>
+          </table>
+        </div>`;
     } catch {
       container.innerHTML = '<p class="live-empty">ライブ情報の取得に失敗しました。</p>';
     }
