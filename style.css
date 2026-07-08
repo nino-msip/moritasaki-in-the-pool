@@ -182,22 +182,33 @@ p {
 
 .member-sns {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   margin-top: 12px;
+  align-items: center;
 }
 
 .member-sns a {
-  color: #666;
-  text-decoration: none;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #333;
-  padding-bottom: 1px;
+  display: inline-flex;
+  align-items: center;
 }
 
-.member-sns a:hover {
-  color: #fff;
-  border-bottom-color: #fff;
+.sns-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.member-sns a:hover .sns-icon,
+.sns-links a:hover .sns-icon {
+  opacity: 1;
+}
+
+.sns-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Music / Live */
