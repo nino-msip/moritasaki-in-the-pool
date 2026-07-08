@@ -211,13 +211,24 @@ p {
 .music-links a {
   color: #fff;
   border: 1px solid #444;
-  padding: 8px 20px;
+  padding: 12px 24px;
   text-decoration: none;
   font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .music-links a:hover {
   border-color: #fff;
+  background: #111;
+}
+
+.link-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 table {
