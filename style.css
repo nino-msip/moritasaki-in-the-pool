@@ -36,6 +36,34 @@ nav a:hover {
   color: #aaa;
 }
 
+nav a.active {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  padding-bottom: 2px;
+}
+
+/* ページ送り */
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  max-width: 900px;
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 1px solid #222;
+}
+
+.page-nav a {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page-nav a:hover {
+  color: #fff;
+}
+
 .site-ver {
   margin-left: auto;
   font-size: 11px;

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — MoritaSaki in the pool</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav>
+    <a href="index.html">TOP</a>
+    <a href="about.html" class="active">About</a>
+    <a href="music.html">Music</a>
+    <a href="goods.html">Goods</a>
+    <a href="contact.html">Contact</a>
+    <a href="setlist.html">Setlist Tool</a>
+    <span id="site-ver" class="site-ver"></span>
+  </nav>
+
+  <!-- About -->
+  <section id="about">
+    <h2>About</h2>
+    <p>
+      バンド紹介文をここに入れる。結成年・活動拠点・音楽スタイルなど。
+    </p>
+
+    <div class="member-grid">
+      <div class="member-card">
+        <div class="instrument">Gt. Vo.</div>
+        <h3>Riku Ishihara</h3>
+        <p>コメント・一言をここに。</p>
+        <div class="member-sns">
+          <a href="https://twitter.com/GochBachEdison" target="_blank">X</a>
+          <a href="https://x.gd/zMERo" target="_blank">Instagram</a>
+        </div>
+      </div>
+      <div class="member-card">
+        <div class="instrument">Ba. Vo.</div>
+        <h3>Natsumi Heike</h3>
+        <p>コメント・一言をここに。</p>
+        <div class="member-sns">
+          <a href="https://twitter.com/cnl_23" target="_blank">X</a>
+          <a href="https://x.gd/Zt8kz" target="_blank">Instagram</a>
+        </div>
+      </div>
+      <div class="member-card">
+        <div class="instrument">Gt.</div>
+        <h3>Taiga Ninomiya</h3>
+        <p>コメント・一言をここに。</p>
+        <div class="member-sns">
+          <a href="https://twitter.com/fuzzy_ayimonin" target="_blank">X</a>
+          <a href="https://x.gd/Scr9I" target="_blank">Instagram</a>
+        </div>
+      </div>
+      <div class="member-card">
+        <div class="instrument">Dr.</div>
+        <h3>Maki Shibata</h3>
+        <p>コメント・一言をここに。</p>
+        <div class="member-sns">
+          <a href="https://x.com/maki2_922?s=21" target="_blank">X</a>
+          <a href="https://x.gd/GpUI6" target="_blank">Instagram</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-nav">
+      <a href="index.html">← TOP</a>
+      <a href="music.html">Music →</a>
+    </div>
+  </section>
+
+<script>
+  // ── サイトバージョン（最新コミット日時から自動生成）──
+  async function loadVersion() {
+    try {
+      const res = await fetch('https://api.github.com/repos/nino-msip/moritasaki-in-the-pool/commits/main');
+      if (!res.ok) return;
+      const data = await res.json();
+      const d = new Date(data.commit.committer.date);
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('site-ver').textContent =
+        `ver ${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}`;
+    } catch {}
+  }
+  loadVersion();
+</script>
+</body>
+</html>
