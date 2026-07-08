@@ -114,6 +114,17 @@ p {
   justify-content: center;
 }
 
+.hero-logo {
+  margin-bottom: 16px;
+}
+
+.hero-logo img {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+}
+
 .hero-instructions {
   margin-top: 40px;
   max-width: 560px;

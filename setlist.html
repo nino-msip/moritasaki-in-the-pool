@@ -466,7 +466,7 @@
       const venueVal = document.getElementById('live-venue').value.trim();
       const dateStr  = dateVal  ? formatDateDisplay(dateVal) : '';
       const venueStr = venueVal ? `@ ${venueVal}` : '';
-      const logoUrl = new URL('logo.png', document.baseURI).href;
+      const logoUrl = new URL('logo.avif', document.baseURI).href;
       return `
         <div class="sheet-meta">
           ${dateStr  ? `<div class="sheet-meta-date">${escapeHtml(dateStr)}</div>`  : ''}
