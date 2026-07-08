@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule — MoritaSaki in the pool</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav>
+    <a href="index.html">TOP</a>
+    <a href="about.html">About</a>
+    <a href="music.html">Music</a>
+    <a href="schedule.html" class="active">Schedule</a>
+    <a href="goods.html">Goods</a>
+    <a href="contact.html">Contact</a>
+    <a href="setlist.html">Setlist Tool</a>
+    <span id="site-ver" class="site-ver"></span>
+  </nav>
+
+  <!-- Live Schedule -->
+  <section id="schedule">
+    <h2>Live Schedule</h2>
+
+    <div id="live-list" class="live-list">
+      <p class="live-loading">Loading...</p>
+    </div>
+
+    <div class="page-nav">
+      <a href="music.html">← Music</a>
+      <a href="goods.html">Goods →</a>
+    </div>
+  </section>
+
+<script>
+  // ★ GoogleスプレッドシートをCSVで公開したURLをここに貼る
+  // 手順: スプレッドシート → ファイル → 共有 → ウェブに公開 → CSV → URLをコピー
+  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTBU3fniYvhEvFTq2Le3HzDHWzuyrh0nlVZgniNIg-2vDU1CWDxXqXTZvcTR6Nn58ucQ6Ej7nih8Wwj/pub?gid=2012153675&single=true&output=csv';
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function safeUrl(u) {
+    return u && /^https?:\/\//.test(u.trim()) ? u.trim() : null;
+  }
+
+  // Google Drive の共有URLからファイルIDを抽出
+  function driveFileId(u) {
+    if (!u) return null;
+    const m = String(u).match(/[?&]id=([\w-]+)|\/d\/([\w-]+)/);
+    return m ? (m[1] || m[2]) : null;
+  }
+
+  // "2026.08.01" "2026/8/1" "2026-08-01" などを Date に変換
+  function parseEventDate(s) {
+    if (!s) return null;
+    const m = String(s).trim().match(/(\d{4})[./\-年](\d{1,2})[./\-月](\d{1,2})/);
+    if (!m) return null;
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return isNaN(d) ? null : d;
+  }
+
+  function formatDateJa(s) {
+    const d = parseEventDate(s);
+    if (!d) return s;
+    const wd = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}（${wd}）`;
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], cell = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') {
+        if (inQ && text[i + 1] === '"') { cell += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === ',' && !inQ) {
+        row.push(cell); cell = '';
+      } else if ((c === '\n' || c === '\r') && !inQ) {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(cell); rows.push(row); row = []; cell = '';
+      } else {
+        cell += c;
+      }
+    }
+    if (row.length || cell) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  function renderEvent(e) {
+    const tickets = [];
+    const zaiko = safeUrl(e['Zaiko']);
+    const eplus = safeUrl(e['e+']);
+    const lp = safeUrl(e['ライブポケット']);
+    if (zaiko) tickets.push(`<a href="${esc(zaiko)}" target="_blank" rel="noopener" class="ticket-btn">Zaiko</a>`);
+    if (eplus) tickets.push(`<a href="${esc(eplus)}" target="_blank" rel="noopener" class="ticket-btn">イープラス</a>`);
+    if (lp) tickets.push(`<a href="${esc(lp)}" target="_blank" rel="noopener" class="ticket-btn">LivePocket</a>`);
+
+    const otherUrl = safeUrl(e['その他　チケットリンク'] || e['その他チケットURL']);
+    const otherName = (e['その他の名前'] || e['その他チケット名'] || '').trim();
+    if (otherUrl) tickets.push(`<a href="${esc(otherUrl)}" target="_blank" rel="noopener" class="ticket-btn">${esc(otherName || 'Ticket')}</a>`);
+
+    const date = esc(formatDateJa(e['日付'] || ''));
+    const title = esc(e['タイトル'] || '');
+    const venue = esc(e['会場'] || '');
+    const city = esc(e['都市'] || '');
+    const notes = esc(e['備考'] || '');
+    const performers = esc(e['共演者'] || '');
+
+    const flyerId = driveFileId(e['フライヤー'] || '');
+    const flyerCell = flyerId
+      ? `<a href="https://drive.google.com/file/d/${esc(flyerId)}/view" target="_blank" rel="noopener">
+           <img class="live-flyer" src="https://drive.google.com/thumbnail?id=${esc(flyerId)}&sz=w200" alt="flyer" loading="lazy" />
+         </a>`
+      : '';
+
+    return `
+      <tr>
+        <td class="live-flyer-cell">${flyerCell}</td>
+        <td class="live-date">${date}</td>
+        <td>
+          ${title ? `<div class="live-title">${title}</div>` : ''}
+          ${performers ? `<div class="live-performers">w/ ${performers}</div>` : ''}
+          ${notes ? `<div class="live-notes">${notes}</div>` : ''}
+        </td>
+        <td class="live-venue">${venue}${city ? ' <span class="live-city">/ ' + city + '</span>' : ''}</td>
+        <td class="live-tickets-cell">
+          ${tickets.length ? tickets.join(' ') : '<span class="live-tba">準備中</span>'}
+        </td>
+      </tr>`;
+  }
+
+  async function loadLiveSchedule() {
+    const container = document.getElementById('live-list');
+    if (!SHEET_CSV_URL) {
+      container.innerHTML = '<p class="live-empty">スプレッドシートURLが未設定です。</p>';
+      return;
+    }
+    try {
+      const res = await fetch(SHEET_CSV_URL);
+      if (!res.ok) throw new Error('fetch failed');
+      const text = await res.text();
+      const rows = parseCSV(text).filter(r => r.some(c => c.trim()));
+      if (rows.length < 2) {
+        container.innerHTML = '<p class="live-empty">現在ライブの予定はありません。</p>';
+        return;
+      }
+      const headers = rows[0].map(h => h.trim());
+      let events = rows.slice(1)
+        .filter(r => r.some(c => c.trim()))
+        .map(row => {
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
+          return obj;
+        });
+
+      // 過去のライブを非表示（今日のライブは表示）
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      events = events.filter(e => {
+        const d = parseEventDate(e['日付']);
+        return !d || d >= today;
+      });
+
+      // 日付の近い順に並べる（日付不明は最後）
+      events.sort((a, b) => {
+        const da = parseEventDate(a['日付']);
+        const db = parseEventDate(b['日付']);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da - db;
+      });
+
+      if (!events.length) {
+        container.innerHTML = '<p class="live-empty">現在ライブの予定はありません。</p>';
+        return;
+      }
+      container.innerHTML = `
+        <div class="live-table-wrap">
+          <table class="live-table">
+            <thead>
+              <tr><th></th><th>Date</th><th>Event</th><th>Venue</th><th>Ticket</th></tr>
+            </thead>
+            <tbody>${events.map(renderEvent).join('')}</tbody>
+          </table>
+        </div>`;
+    } catch {
+      container.innerHTML = '<p class="live-empty">ライブ情報の取得に失敗しました。</p>';
+    }
+  }
+
+  loadLiveSchedule();
+
+  // ── サイトバージョン（最新コミット日時から自動生成）──
+  async function loadVersion() {
+    try {
+      const res = await fetch('https://api.github.com/repos/nino-msip/moritasaki-in-the-pool/commits/main');
+      if (!res.ok) return;
+      const data = await res.json();
+      const d = new Date(data.commit.committer.date);
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('site-ver').textContent =
+        `ver ${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}`;
+    } catch {}
+  }
+  loadVersion();
+</script>
+</body>
+</html>
