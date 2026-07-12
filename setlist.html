@@ -956,9 +956,31 @@
     //    新しい会場タブを追加したら、公開設定でそのタブを選び直して
     //    出てきたURL（gid=... 付き）をこの配列に追加する。
     //    シート内の「会場：○○」の行から会場名を自動取得する。
-    const SETZU_CSV_URLS = [
-      'https://docs.google.com/spreadsheets/d/e/2PACX-1vTMfimo3jxFyoJw4wcKZN1uz9LjpD0BE3pquxsfxECmfrEb-IX9Eqls7CAXaOAt2lL_JG-EzCkQpPO_/pub?output=csv',
+    const SETZU_PUB_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTMfimo3jxFyoJw4wcKZN1uz9LjpD0BE3pquxsfxECmfrEb-IX9Eqls7CAXaOAt2lL_JG-EzCkQpPO_/pub';
+    // 会場タブの gid 一覧（新しい会場タブを追加したら gid をここに足す）
+    const SETZU_GIDS = [
+      '774749046',  // UrBANGUILD
+      '159473594',  // ESAKA MUSE
+      '901873294',  // KANDA SQUARE HALL
+      '1701180112', // LIVE HOUSE GATTACA
+      '1708768781', // GARRET udagawa
+      '1830516021', // KOENJI HIGH
+      '988813876',  // CONPASS
+      '1465709287', // 下北沢SPREAD
+      '0',          // 下北沢近道
+      '2045764218', // 下北沢BASEMENT BAR
+      '1892195918', // 下北沢Flowers Loft
+      '603514165',  // 下北沢LIVE HAUS
+      '1970106006', // THREE
+      '2078294318', // 鶴舞DAYTRIP
+      '316196368',  // TAKE OFF 7
+      '1305637123', // 奈良NEVER LAND
+      '1929819638', // Pangea
+      '93956951',   // 寺田町Fireloop
+      '425391251',  // monarecords
+      '1128182965', // Yogibo HOLY MOUNTAIN
     ];
+    const SETZU_CSV_URLS = SETZU_GIDS.map(gid => `${SETZU_PUB_BASE}?gid=${gid}&single=true&output=csv`);
 
     let setzuData = []; // [{ venue, amps:[{use,num,model,note}], gear:[{part,text}], monitor:[{part,text}] }]
 
@@ -993,44 +1015,55 @@
     // 会場シート（セルで描かれたセット図）のCSVから構造化データを抽出する。
     // 認識するブロック: 「会場：○○」/ 「○○ Amp」行（❶❷…の番号付き）/
     // 「持ち込み機材」「初期返し要望」（パート名＋内容の行が続く）
+    // ※会場タブによって表の開始列がずれるため、ラベルの位置を行ごとに探して
+    //   その右隣を key 列として扱う（列位置に依存しない）。
     function parseVenueSheet(rows) {
       const d = { venue: '', amps: [], gear: [], monitor: [] };
       const NUM_RE = /^[❶-❿①-⑳]/; // ❶-❿ ①-⑳
       let section = '';
       let ampUse = '';
+      let keyCol = -1; // セクションの key（番号/パート名）が入る列
+
       for (const raw of rows) {
         const c = raw.map(x => (x || '').trim());
         if (!d.venue) {
           const hit = c.find(x => /会場[：:]/.test(x));
           if (hit) { d.venue = hit.replace(/.*会場[：:]\s*/, '').trim(); continue; }
         }
-        const label = c[2] || '';
-        const key = c[3] || '';
-        const val = c[4] || '';
-        const note = c[5] || '';
 
-        if (/Amp$/i.test(label)) {
+        // セクション見出しを行内から探す
+        const ampIdx = c.findIndex(x => /Amp$/i.test(x));
+        const gearIdx = c.indexOf('持ち込み機材');
+        const monIdx = c.indexOf('初期返し要望');
+
+        if (ampIdx >= 0) {
           section = 'amp';
-          ampUse = label;
-          if (key) d.amps.push({ use: ampUse, num: key, model: val, note });
+          ampUse = c[ampIdx];
+          keyCol = ampIdx + 1;
+          if (c[keyCol]) d.amps.push({ use: ampUse, num: c[keyCol], model: c[keyCol + 1] || '', note: c[keyCol + 2] || '' });
           continue;
         }
-        if (label === '持ち込み機材') {
+        if (gearIdx >= 0) {
           section = 'gear';
-          if (key) d.gear.push({ part: key, text: val });
+          keyCol = gearIdx + 1;
+          if (c[keyCol]) d.gear.push({ part: c[keyCol], text: c[keyCol + 1] || '' });
           continue;
         }
-        if (label === '初期返し要望') {
+        if (monIdx >= 0) {
           section = 'monitor';
-          if (key) d.monitor.push({ part: key, text: val });
+          keyCol = monIdx + 1;
+          if (c[keyCol]) d.monitor.push({ part: c[keyCol], text: c[keyCol + 1] || '' });
           continue;
         }
-        if (label) { section = ''; continue; } // 未知のラベル → セクション終了
-        if (!key) continue;                    // 空行はスキップ（セクション継続）
 
-        if (section === 'amp' && NUM_RE.test(key)) d.amps.push({ use: ampUse, num: key, model: val, note });
-        else if (section === 'gear') d.gear.push({ part: key, text: val });
-        else if (section === 'monitor') d.monitor.push({ part: key, text: val });
+        if (!section || keyCol < 0) continue;
+        if (c[keyCol - 1]) { section = ''; continue; } // 別の未知ラベル → セクション終了
+        const key = c[keyCol] || '';
+        if (!key) continue; // 空行はスキップ（セクション継続）
+
+        if (section === 'amp' && NUM_RE.test(key)) d.amps.push({ use: ampUse, num: key, model: c[keyCol + 1] || '', note: c[keyCol + 2] || '' });
+        else if (section === 'gear') d.gear.push({ part: key, text: c[keyCol + 1] || '' });
+        else if (section === 'monitor') d.monitor.push({ part: key, text: c[keyCol + 1] || '' });
       }
       return d;
     }
