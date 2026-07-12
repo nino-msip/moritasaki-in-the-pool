@@ -305,7 +305,9 @@
           <div class="print-sheet" id="sheet-combined"></div>
           <div class="actions-row">
             <button class="pdf-btn" onclick="printTab('combined')">PDFとして保存</button>
+            <button class="secondary" onclick="createGoogleSheet('combined')">Googleスプレッドシート作成</button>
             <button class="secondary" onclick="downloadXlsxSheet('combined')">編集用スプレッドシート（.xlsx）</button>
+            <span id="gs-link-combined" style="font-size:12px;"></span>
             <button class="secondary" onclick="downloadCsv('combined')">CSVダウンロード（Excel用）</button>
             <button class="secondary" onclick="copySheet('combined')">テキストをコピー（スプレッドシート貼付用）</button>
             <span class="copy-msg" id="msg-combined"></span>
@@ -317,7 +319,9 @@
           <div class="print-sheet" id="sheet-count"></div>
           <div class="actions-row">
             <button class="pdf-btn" onclick="printTab('count')">PDFとして保存</button>
+            <button class="secondary" onclick="createGoogleSheet('count')">Googleスプレッドシート作成</button>
             <button class="secondary" onclick="downloadXlsxSheet('count')">編集用スプレッドシート（.xlsx）</button>
+            <span id="gs-link-count" style="font-size:12px;"></span>
             <button class="secondary" onclick="downloadCsv('count')">CSVダウンロード（Excel用）</button>
             <button class="secondary" onclick="copySheet('count')">テキストをコピー（スプレッドシート貼付用）</button>
             <span class="copy-msg" id="msg-count"></span>
@@ -347,7 +351,9 @@
               <div id="setzu-view" style="margin-top:16px;"></div>
               <div class="actions-row" style="margin-top:16px;">
                 <button class="pdf-btn" onclick="printStaffSheet()">スタッフ用シートをPDF保存（1p:セット図 / 2p:音響要望）</button>
+                <button class="secondary" onclick="createGoogleSheet('staff')">Googleスプレッドシート作成</button>
                 <button class="secondary" onclick="downloadStaffXlsx()">編集用スプレッドシート（.xlsx）</button>
+                <span id="gs-link-staff" style="font-size:12px;"></span>
                 <button class="secondary" onclick="downloadStaffCsv()">スタッフ用CSVをダウンロード</button>
               </div>
             </div>
@@ -1641,6 +1647,110 @@
 
       const label = xlsxFileLabel();
       saveWorkbook(wb, `${label ? label + '_' : ''}スタッフ用シート.xlsx`);
+    }
+
+    // ── Googleスプレッドシート作成（Apps Script Webアプリ経由） ────────────
+    // ★ Apps Script を「ウェブアプリとしてデプロイ（実行: 自分 / アクセス: 全員）」した
+    //    /exec のURLをここに貼る
+    const GS_WEBAPP_URL = '';
+
+    function gsMetaLines(includeMeta) {
+      const metas = [];
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      if (dateVal)  metas.push(formatDateDisplay(dateVal));
+      if (venueVal) metas.push('@ ' + venueVal);
+      if (includeMeta) {
+        const o = getOrderText(); if (o) metas.push(o);
+        const se = getSEText();   if (se) metas.push(se);
+      }
+      return metas;
+    }
+
+    function buildSetzuGsData(d) {
+      const W = 8;
+      const cells = [];
+      cells.push({ r: 0, c: 4, text: 'Dr.' });
+      cells.push({ r: 0, c: 5, text: '🎤' });
+      const order = u => (/VoBa/i.test(u) ? 0 : /VoGt/i.test(u) ? 1 : 2);
+      const amps = [...d.amps].sort((a, b) => order(a.use) - order(b.use) || plainNum(a.num) - plainNum(b.num));
+      const cols = amps.length === 1 ? [4]
+        : amps.map((_, i) => Math.round(1 + (W - 1) * i / (amps.length - 1)));
+      amps.forEach((a, i) => {
+        cells.push({ r: 1, c: cols[i], text: plainNum(a.num), bold: true, bg: '#111111', fontColor: '#ffffff', borderColor: ampColor(a.use) });
+      });
+      cells.push({ r: 3, c: 2, text: 'Vo.Ba.' });
+      cells.push({ r: 3, c: 4, text: 'Vo.Gt.' });
+      cells.push({ r: 3, c: 7, text: 'Gt.' });
+      cells.push({ r: 4, c: 2, text: '🎤' });
+      cells.push({ r: 4, c: 4, text: '🎤' });
+      [1, 3, 5, 7].forEach(c => cells.push({ r: 5, c, text: '▼MON' }));
+      cells.push({ r: 6, c: 1, text: 'フロア', span: W });
+      return {
+        venue: d.venue,
+        diagram: cells,
+        diagramRows: 7,
+        amps: d.amps.map(a => [a.num, a.use, a.model, a.note]),
+        ampColors: d.amps.map(a => ampColor(a.use)),
+        gear: d.gear.map(g => [g.part, g.text]),
+        monitor: d.monitor.map(m => [m.part, m.text]),
+      };
+    }
+
+    function buildGsPayload(kind) {
+      const titles = { combined: '照明・音響要望シート', count: 'セットリスト', staff: 'スタッフ用シート' };
+      const label = xlsxFileLabel();
+      const { rows, totalSec } = combinedRowsData();
+      let n = 0;
+      const countRows = items.map(item => {
+        if (item.type === 'mc') return ['', 'MC', ''];
+        n++;
+        const d = SONG_DB[item.name] || {};
+        return [n + '.', item.name, d.count && d.count !== '-' ? d.count : ''];
+      });
+      const payload = {
+        kind,
+        filename: (label ? label + '_' : '') + titles[kind],
+        meta: gsMetaLines(true),
+        metaBasic: gsMetaLines(false),
+        combined: {
+          rows: rows.map(r => r.map(c => c.v)),
+          note: '※全曲ストロボは無しでお願いします',
+          total: '合計 ' + formatDuration(totalSec),
+        },
+        count: { rows: countRows },
+      };
+      if (kind === 'staff') payload.setzu = buildSetzuGsData(currentSetzu());
+      return payload;
+    }
+
+    async function createGoogleSheet(kind) {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      if (kind === 'staff' && !currentSetzu()) {
+        alert('会場を選択してください（セット図データが必要です）。');
+        return;
+      }
+      const msg = document.getElementById('gs-link-' + kind);
+      if (!GS_WEBAPP_URL) {
+        msg.textContent = 'Apps ScriptのWebアプリURLが未設定です';
+        msg.style.color = '#cc6666';
+        return;
+      }
+      msg.style.color = '#aaa';
+      msg.textContent = 'スプレッドシートを作成中...（10秒ほどかかります）';
+      try {
+        const res = await fetch(GS_WEBAPP_URL, { method: 'POST', body: JSON.stringify(buildGsPayload(kind)) });
+        const j = await res.json();
+        if (!j.url) throw new Error(j.error || 'no url');
+        msg.innerHTML = `<a href="${escapeHtml(j.url)}" target="_blank" rel="noopener" style="color:#7cc4ff;">✓ 作成完了 — 開く ↗</a>`;
+        window.open(j.url, '_blank');
+      } catch (e) {
+        msg.style.color = '#cc6666';
+        msg.textContent = '作成に失敗しました（WebアプリのデプロイとURLを確認してください）';
+      }
     }
 
     // ── Clear ────────────────────────────────────────────────────────────
