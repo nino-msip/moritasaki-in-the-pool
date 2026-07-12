@@ -1279,14 +1279,22 @@
         <style>
           @page { size: A4; margin: 0; }
           * { margin:0; padding:0; box-sizing:border-box; }
-          body { font-family: Arial, sans-serif; background:#fff; color:#000; padding:15mm; }
+          body { font-family: Arial, sans-serif; background:#fff; color:#000; padding:10mm 15mm; }
           .page-break { page-break-after: always; }
-          .setzu-title { font-size:20px; font-weight:700; text-align:center; margin:8px 0 16px; }
+          .setzu-title { font-size:15px; font-weight:700; text-align:center; margin:4px 0 8px; }
           ${SETZU_TABLE_CSS}
+          /* 1ページ目をA4に収めるためのコンパクト調整 */
+          .page-break .sheet-logo-img { width:38%; max-width:360px; margin:6px auto 10px; }
+          .page-break svg { max-width:400px !important; margin:0 auto 8px !important; }
+          .setzu-section { margin-bottom: 10px; }
+          .setzu-section-title { font-size: 12px; margin-bottom: 4px; }
+          .setzu-table { font-size: 11px; }
+          .setzu-table th { padding: 4px 6px; }
+          .setzu-table td { padding: 4px 6px; line-height: 1.45; }
           .sheet-meta { text-align:center; margin-bottom:2px; }
-          .sheet-meta-date  { font-size:18px; color:#111; padding:4px 0; font-weight:700; }
-          .sheet-meta-venue { font-size:18px; color:#111; padding:2px 0; font-weight:700; }
-          .sheet-meta-sub   { font-size:14px; color:#111; padding:2px 0; font-weight:600; }
+          .sheet-meta-date  { font-size:15px; color:#111; padding:2px 0; font-weight:700; }
+          .sheet-meta-venue { font-size:15px; color:#111; padding:1px 0; font-weight:700; }
+          .sheet-meta-sub   { font-size:12px; color:#111; padding:1px 0; font-weight:600; }
           .sheet-logo-bar {
             display:block; text-align:center; background:#cc1111; color:#fff;
             font-weight:900; font-style:italic; font-size:28px;
