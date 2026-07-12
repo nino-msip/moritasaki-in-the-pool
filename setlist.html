@@ -1113,6 +1113,76 @@
     }
     document.getElementById('live-venue').addEventListener('change', autoSelectSetzuVenue);
 
+    // アンプの用途 → 図・表で共通の色
+    function ampColor(use) {
+      if (/VoGt/i.test(use)) return '#f0932b'; // オレンジ
+      if (/VoBa/i.test(use)) return '#e02020'; // 赤
+      if (/Gt/i.test(use))   return '#f5e642'; // 黄
+      return '#999';
+    }
+
+    // ❶→1 / ①→1 の変換（図中は普通の数字で表示）
+    function plainNum(s) {
+      const code = (s || '').codePointAt(0) || 0;
+      if (code >= 0x2776 && code <= 0x277F) return String(code - 0x2775); // ❶-❿
+      if (code >= 0x2460 && code <= 0x2473) return String(code - 0x245F); // ①-⑳
+      return s;
+    }
+
+    // セット図（ステージ配置）をアンプデータから自動描画
+    function setzuDiagramSvg(d) {
+      if (!d.amps.length) return '';
+      const W = 800, H = 430;
+      let s = '';
+
+      // ステージ枠
+      s += `<rect x="20" y="16" width="760" height="360" rx="14" fill="#fff" stroke="#333" stroke-width="2"/>`;
+
+      // マイクスタンド記号（円＋スタンド）
+      const mic = (x, y) => `
+        <line x1="${x}" y1="${y}" x2="${x}" y2="${y + 22}" stroke="#333" stroke-width="2"/>
+        <circle cx="${x}" cy="${y - 2}" r="7" fill="none" stroke="#333" stroke-width="2"/>
+        <line x1="${x - 7}" y1="${y - 2}" x2="${x + 7}" y2="${y - 2}" stroke="#333" stroke-width="1.5"/>`;
+
+      // モニター記号（封筒型ウェッジ）
+      const wedge = (x, y) => `
+        <rect x="${x - 18}" y="${y}" width="36" height="24" fill="#fff" stroke="#333" stroke-width="2"/>
+        <path d="M ${x - 18} ${y} L ${x} ${y + 13} L ${x + 18} ${y}" fill="none" stroke="#333" stroke-width="2"/>`;
+
+      // Dr.（中央奥）＋マイク
+      s += `<rect x="362" y="38" width="76" height="42" rx="8" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+            <text x="400" y="64" text-anchor="middle" font-size="15" fill="#888" font-family="Arial">Dr.</text>`;
+      s += mic(462, 52);
+      s += wedge(496, 40);
+
+      // アンプ（VoBa → VoGt → Gt の順に左から均等配置）
+      const order = u => (/VoBa/i.test(u) ? 0 : /VoGt/i.test(u) ? 1 : 2);
+      const amps = [...d.amps].sort((a, b) => order(a.use) - order(b.use) || plainNum(a.num) - plainNum(b.num));
+      const n = amps.length;
+      amps.forEach((a, i) => {
+        const cx = 110 + (580 / Math.max(n - 1, 1)) * i;
+        const col = ampColor(a.use);
+        s += `<rect x="${cx - 45}" y="118" width="90" height="46" rx="10" fill="#111" stroke="${col}" stroke-width="7"/>
+              <text x="${cx}" y="148" text-anchor="middle" font-size="19" font-weight="bold" fill="#fff" font-family="Arial">${escapeHtml(plainNum(a.num))}</text>`;
+      });
+
+      // メンバー（標準立ち位置: Vo.Ba 左 / Vo.Gt 中央 / Gt 上手）＋ボーカルマイク
+      const members = [['Vo.Ba.', 150], ['Vo.Gt.', 400], ['Gt.', 650]];
+      members.forEach(([label, cx]) => {
+        s += `<rect x="${cx - 38}" y="222" width="76" height="40" rx="8" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+              <text x="${cx}" y="247" text-anchor="middle" font-size="14" fill="#888" font-family="Arial">${label}</text>`;
+      });
+      s += mic(150, 288) + mic(400, 288);
+
+      // 転がしモニター（前列4つ）
+      [150, 320, 480, 650].forEach(x => { s += wedge(x, 330); });
+
+      s += `<text x="400" y="408" text-anchor="middle" font-size="15" fill="#333" font-family="Arial">フロア</text>`;
+
+      return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
+                   style="width:100%; max-width:560px; display:block; margin:0 auto 16px; background:#fff;">${s}</svg>`;
+    }
+
     // セット情報を表として組み立てる（画面用/印刷用共通。スタイルはCSSクラスで分岐）
     function setzuTablesHtml(d) {
       const section = (title, headHtml, bodyHtml) => bodyHtml ? `
@@ -1126,7 +1196,7 @@
 
       const amps = d.amps.map(a => `<tr>
         <td class="setzu-num">${escapeHtml(a.num)}</td>
-        <td>${escapeHtml(a.use)}</td>
+        <td style="background:${ampColor(a.use)}; font-weight:700; print-color-adjust:exact; -webkit-print-color-adjust:exact;">${escapeHtml(a.use)}</td>
         <td>${escapeHtml(a.model)}</td>
         <td>${escapeHtml(a.note)}</td>
       </tr>`).join('');
@@ -1178,7 +1248,10 @@
         <p style="color:#fff; font-size:14px; font-weight:700; margin-bottom:10px;">${escapeHtml(d.venue)} セット情報</p>
         <div style="background:#fff; padding:16px;">
           <style>${SETZU_TABLE_CSS}</style>
-          <div style="color:#000;">${setzuTablesHtml(d)}</div>
+          <div style="color:#000;">
+            ${setzuDiagramSvg(d)}
+            ${setzuTablesHtml(d)}
+          </div>
         </div>
       `;
     }
@@ -1246,6 +1319,7 @@
         <div class="page-break">
           ${headerHtml}
           <div class="setzu-title">${escapeHtml(d.venue)} セット情報</div>
+          ${setzuDiagramSvg(d)}
           ${setzuTablesHtml(d)}
         </div>
         <!-- 2ページ目: 照明・音響要望 -->
