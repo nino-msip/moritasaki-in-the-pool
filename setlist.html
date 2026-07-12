@@ -951,12 +951,16 @@
     }
 
     // ── 会場セット図（スタッフ用） ───────────────────────────────────────
-    // ★ 会場別セット図スプレッドシートを「ファイル → 共有 → ウェブに公開 → CSV」で
-    //    公開したURLをここに貼る（schedule.html の SHEET_CSV_URL と同じ方式）
-    //    想定する列: 会場名 / セット図画像のDriveリンク / 補足テキスト
-    const SETZU_CSV_URL = '';
+    // ★ 会場別セット図シート（タブ）を「ファイル → 共有 → ウェブに公開 → CSV」で
+    //    公開したURLを1会場=1URLで並べる。
+    //    新しい会場タブを追加したら、公開設定でそのタブを選び直して
+    //    出てきたURL（gid=... 付き）をこの配列に追加する。
+    //    シート内の「会場：○○」の行から会場名を自動取得する。
+    const SETZU_CSV_URLS = [
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vTMfimo3jxFyoJw4wcKZN1uz9LjpD0BE3pquxsfxECmfrEb-IX9Eqls7CAXaOAt2lL_JG-EzCkQpPO_/pub?output=csv',
+    ];
 
-    let setzuData = []; // [{ venue, image, text }]
+    let setzuData = []; // [{ venue, amps:[{use,num,model,note}], gear:[{part,text}], monitor:[{part,text}] }]
 
     function parseCSV(text) {
       const rows = [];
@@ -986,36 +990,69 @@
       return m ? (m[1] || m[2]) : null;
     }
 
+    // 会場シート（セルで描かれたセット図）のCSVから構造化データを抽出する。
+    // 認識するブロック: 「会場：○○」/ 「○○ Amp」行（❶❷…の番号付き）/
+    // 「持ち込み機材」「初期返し要望」（パート名＋内容の行が続く）
+    function parseVenueSheet(rows) {
+      const d = { venue: '', amps: [], gear: [], monitor: [] };
+      const NUM_RE = /^[❶-❿①-⑳]/; // ❶-❿ ①-⑳
+      let section = '';
+      let ampUse = '';
+      for (const raw of rows) {
+        const c = raw.map(x => (x || '').trim());
+        if (!d.venue) {
+          const hit = c.find(x => /会場[：:]/.test(x));
+          if (hit) { d.venue = hit.replace(/.*会場[：:]\s*/, '').trim(); continue; }
+        }
+        const label = c[2] || '';
+        const key = c[3] || '';
+        const val = c[4] || '';
+        const note = c[5] || '';
+
+        if (/Amp$/i.test(label)) {
+          section = 'amp';
+          ampUse = label;
+          if (key) d.amps.push({ use: ampUse, num: key, model: val, note });
+          continue;
+        }
+        if (label === '持ち込み機材') {
+          section = 'gear';
+          if (key) d.gear.push({ part: key, text: val });
+          continue;
+        }
+        if (label === '初期返し要望') {
+          section = 'monitor';
+          if (key) d.monitor.push({ part: key, text: val });
+          continue;
+        }
+        if (label) { section = ''; continue; } // 未知のラベル → セクション終了
+        if (!key) continue;                    // 空行はスキップ（セクション継続）
+
+        if (section === 'amp' && NUM_RE.test(key)) d.amps.push({ use: ampUse, num: key, model: val, note });
+        else if (section === 'gear') d.gear.push({ part: key, text: val });
+        else if (section === 'monitor') d.monitor.push({ part: key, text: val });
+      }
+      return d;
+    }
+
     async function loadSetzu() {
       const status = document.getElementById('setzu-status');
       const select = document.getElementById('setzu-venue');
-      if (!SETZU_CSV_URL) {
-        status.textContent = 'セット図データのURLが未設定です（スプレッドシートを「ウェブに公開 → CSV」して SETZU_CSV_URL に設定してください）';
+      if (!SETZU_CSV_URLS.length) {
+        status.textContent = 'セット図データのURLが未設定です（会場シートを「ウェブに公開 → CSV」して SETZU_CSV_URLS に追加してください）';
         select.innerHTML = '<option value="">— データ未設定 —</option>';
         return;
       }
       status.textContent = 'セット図データを読み込み中...';
       try {
-        const res = await fetch(SETZU_CSV_URL);
-        if (!res.ok) throw new Error('fetch failed');
-        const rows = parseCSV(await res.text()).filter(r => r.some(c => c.trim()));
-        if (rows.length < 2) throw new Error('empty');
-        const headers = rows[0].map(h => h.trim());
-        // 列名をゆるくマッチ: 会場 / 画像・図・リンク・URL / それ以外=補足テキスト
-        const venueCol = headers.findIndex(h => h.includes('会場'));
-        const imageCol = headers.findIndex(h => /画像|図|リンク|URL|url/.test(h) && !h.includes('会場'));
-        setzuData = rows.slice(1)
-          .map(r => {
-            const venue = (venueCol >= 0 ? r[venueCol] : r[0] || '').trim();
-            const image = (imageCol >= 0 ? r[imageCol] : '').trim();
-            const text = headers
-              .map((h, i) => ({ h, v: (r[i] || '').trim() }))
-              .filter((c, i) => i !== venueCol && i !== imageCol && c.v)
-              .map(c => c.v)
-              .join('\n');
-            return { venue, image, text };
-          })
-          .filter(d => d.venue);
+        const results = await Promise.allSettled(SETZU_CSV_URLS.map(async url => {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('fetch failed');
+          return parseVenueSheet(parseCSV(await res.text()));
+        }));
+        setzuData = results
+          .filter(r => r.status === 'fulfilled' && r.value.venue)
+          .map(r => r.value);
         if (!setzuData.length) throw new Error('no venues');
 
         select.innerHTML = '<option value="">— 会場を選択 —</option>' +
@@ -1043,16 +1080,57 @@
     }
     document.getElementById('live-venue').addEventListener('change', autoSelectSetzuVenue);
 
-    function setzuImageHtml(image, forPrint) {
-      if (!image) return '';
-      const id = driveFileId(image);
-      const src = id ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200` : image;
-      const style = forPrint
-        ? 'max-width:100%; max-height:200mm; display:block; margin:0 auto;'
-        : 'max-width:100%; display:block; background:#fff;';
-      return `<img src="${escapeHtml(src)}" alt="セット図" style="${style}"
-                   onerror="this.outerHTML='&lt;p style=&quot;color:#cc1111;font-size:12px;&quot;&gt;画像を読み込めませんでした（Driveリンクの共有設定を確認してください）&lt;/p&gt;'" />`;
+    // セット情報を表として組み立てる（画面用/印刷用共通。スタイルはCSSクラスで分岐）
+    function setzuTablesHtml(d) {
+      const section = (title, headHtml, bodyHtml) => bodyHtml ? `
+        <div class="setzu-section">
+          <div class="setzu-section-title">${title}</div>
+          <table class="setzu-table">
+            <thead><tr>${headHtml}</tr></thead>
+            <tbody>${bodyHtml}</tbody>
+          </table>
+        </div>` : '';
+
+      const amps = d.amps.map(a => `<tr>
+        <td class="setzu-num">${escapeHtml(a.num)}</td>
+        <td>${escapeHtml(a.use)}</td>
+        <td>${escapeHtml(a.model)}</td>
+        <td>${escapeHtml(a.note)}</td>
+      </tr>`).join('');
+
+      const gear = d.gear.map(g => `<tr>
+        <td class="setzu-part">${escapeHtml(g.part)}</td>
+        <td class="text-left-cell">${escapeHtml(g.text)}</td>
+      </tr>`).join('');
+
+      const monitor = d.monitor.map(m => `<tr>
+        <td class="setzu-part">${escapeHtml(m.part)}</td>
+        <td class="text-left-cell">${escapeHtml(m.text)}</td>
+      </tr>`).join('');
+
+      return section('アンプ', '<th style="width:48px;">番号</th><th style="width:110px;">用途</th><th>機種</th><th style="width:110px;">レンタル/持込</th>', amps)
+           + section('持ち込み機材', '<th style="width:110px;">パート</th><th>機材</th>', gear)
+           + section('初期返し要望', '<th style="width:110px;">パート</th><th>要望</th>', monitor);
     }
+
+    const SETZU_TABLE_CSS = `
+      .setzu-section { margin-bottom: 20px; }
+      .setzu-section-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+      .setzu-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+      .setzu-table th {
+        background: #f3f3f3; color: #000; font-weight: 600; text-align: center;
+        padding: 7px 8px; border: 1px solid #b7b7b7; white-space: nowrap;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .setzu-table td {
+        padding: 7px 8px; border: 1px solid #d0d0d0;
+        text-align: center; vertical-align: middle;
+        background: #fff; color: #000; line-height: 1.6;
+      }
+      .setzu-table td.text-left-cell { text-align: left; white-space: pre-line; }
+      .setzu-table td.setzu-num { font-weight: 700; }
+      .setzu-table td.setzu-part { font-weight: 600; white-space: nowrap; }
+    `;
 
     function currentSetzu() {
       const v = document.getElementById('setzu-venue').value;
@@ -1064,10 +1142,11 @@
       const d = currentSetzu();
       if (!d) { view.innerHTML = ''; return; }
       view.innerHTML = `
-        <p style="color:#fff; font-size:14px; font-weight:700; margin-bottom:10px;">${escapeHtml(d.venue)} セット図</p>
-        ${setzuImageHtml(d.image, false)}
-        ${d.text ? `<p style="color:#ccc; font-size:13px; margin-top:12px; white-space:pre-line;">${escapeHtml(d.text)}</p>` : ''}
-        ${d.image ? `<p style="margin-top:8px;"><a href="${escapeHtml(d.image)}" target="_blank" rel="noopener" style="color:#777; font-size:12px;">元画像を開く ↗</a></p>` : ''}
+        <p style="color:#fff; font-size:14px; font-weight:700; margin-bottom:10px;">${escapeHtml(d.venue)} セット情報</p>
+        <div style="background:#fff; padding:16px;">
+          <style>${SETZU_TABLE_CSS}</style>
+          <div style="color:#000;">${setzuTablesHtml(d)}</div>
+        </div>
       `;
     }
 
@@ -1097,7 +1176,7 @@
           body { font-family: Arial, sans-serif; background:#fff; color:#000; padding:15mm; }
           .page-break { page-break-after: always; }
           .setzu-title { font-size:20px; font-weight:700; text-align:center; margin:8px 0 16px; }
-          .setzu-text { font-size:13px; white-space:pre-line; margin-top:14px; line-height:1.7; }
+          ${SETZU_TABLE_CSS}
           .sheet-meta { text-align:center; margin-bottom:2px; }
           .sheet-meta-date  { font-size:18px; color:#111; padding:4px 0; font-weight:700; }
           .sheet-meta-venue { font-size:18px; color:#111; padding:2px 0; font-weight:700; }
@@ -1130,12 +1209,11 @@
           }
         </style>
       </head><body>
-        <!-- 1ページ目: セット図 -->
+        <!-- 1ページ目: セット情報 -->
         <div class="page-break">
           ${headerHtml}
-          <div class="setzu-title">${escapeHtml(d.venue)} セット図</div>
-          ${setzuImageHtml(d.image, true)}
-          ${d.text ? `<div class="setzu-text">${escapeHtml(d.text)}</div>` : ''}
+          <div class="setzu-title">${escapeHtml(d.venue)} セット情報</div>
+          ${setzuTablesHtml(d)}
         </div>
         <!-- 2ページ目: 照明・音響要望 -->
         ${combinedHtml}
@@ -1160,10 +1238,20 @@
       rows.push(['MoritaSaki in the pool スタッフ用シート']);
       if (d) {
         rows.push([]);
-        rows.push(['■ セット図']);
+        rows.push(['■ セット情報']);
         rows.push(['会場', d.venue]);
-        if (d.image) rows.push(['セット図画像', d.image]);
-        if (d.text)  rows.push(['補足', d.text]);
+        if (d.amps.length) {
+          rows.push(['アンプ', '番号', '用途', '機種', 'レンタル/持込']);
+          d.amps.forEach(a => rows.push(['', a.num, a.use, a.model, a.note]));
+        }
+        if (d.gear.length) {
+          rows.push(['持ち込み機材', 'パート', '機材']);
+          d.gear.forEach(g => rows.push(['', g.part, g.text]));
+        }
+        if (d.monitor.length) {
+          rows.push(['初期返し要望', 'パート', '要望']);
+          d.monitor.forEach(m => rows.push(['', m.part, m.text]));
+        }
       }
       rows.push([]);
       rows.push(['■ 照明・音響要望']);
