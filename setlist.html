@@ -1654,6 +1654,30 @@
     //    /exec のURLをここに貼る
     const GS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw_n3gLljPsr2tdw6W7NM24ctnkn2qHqH8_pcyY0q9PYOs42E6MjlNPPc-UCPJcA9h_/exec';
 
+    // SVG文字列 → PNGのdata URI（スプレッドシートに画像として埋め込むため）
+    function svgToPngDataUriGs(svgStr) {
+      return new Promise((resolve, reject) => {
+        const m = svgStr.match(/viewBox="0 0 (\d+) (\d+)"/);
+        const w = m ? +m[1] * 1.5 : 1200;
+        const h = m ? +m[2] * 1.5 : 640;
+        const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          resolve(c.toDataURL('image/png'));
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
     function gsMetaLines(includeMeta) {
       const metas = [];
       const dateVal  = document.getElementById('live-date').value;
@@ -1742,7 +1766,15 @@
       msg.style.color = '#aaa';
       msg.textContent = 'スプレッドシートを作成中...（10秒ほどかかります）';
       try {
-        const res = await fetch(GS_WEBAPP_URL, { method: 'POST', body: JSON.stringify(buildGsPayload(kind)) });
+        const payload = buildGsPayload(kind);
+        if (kind === 'staff') {
+          // PDFと同じセット図（SVG）をPNG化して画像として挿入する
+          try {
+            const dataUri = await svgToPngDataUriGs(setzuDiagramSvg(currentSetzu()));
+            payload.setzu.imageB64 = dataUri.split(',')[1];
+          } catch {} // 変換に失敗したらセル描画版にフォールバック
+        }
+        const res = await fetch(GS_WEBAPP_URL, { method: 'POST', body: JSON.stringify(payload) });
         const j = await res.json();
         if (!j.url) throw new Error(j.error || 'no url');
         msg.innerHTML = `<a href="${escapeHtml(j.url)}" target="_blank" rel="noopener" style="color:#7cc4ff;">✓ 作成完了 — 開く ↗</a>`;
