@@ -262,6 +262,37 @@ p {
   flex-shrink: 0;
 }
 
+/* MV */
+.mv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.mv-card {
+  display: block;
+  color: #fff;
+}
+
+.mv-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border: 1px solid #333;
+  transition: border-color 0.2s;
+}
+
+.mv-card:hover .mv-thumb {
+  border-color: #fff;
+}
+
+.mv-title {
+  margin-top: 10px;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+
 table {
   width: 100%;
   max-width: 720px;
