@@ -25,20 +25,28 @@
     <h2>MV</h2>
 
     <div class="mv-grid">
-      <a class="mv-card" href="https://www.youtube.com/watch?v=sSI-XLPiaXk" target="_blank">
-        <img class="mv-thumb" src="https://i.ytimg.com/vi/sSI-XLPiaXk/hqdefault.jpg" alt="" loading="lazy" />
+      <a class="mv-card" href="https://www.youtube.com/watch?v=sSI-XLPiaXk" target="_blank" data-video-id="sSI-XLPiaXk">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/sSI-XLPiaXk/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
         <div class="mv-title">Ice box</div>
       </a>
-      <a class="mv-card" href="https://www.youtube.com/watch?v=gzDnwmDP9NQ" target="_blank">
-        <img class="mv-thumb" src="https://i.ytimg.com/vi/gzDnwmDP9NQ/hqdefault.jpg" alt="" loading="lazy" />
+      <a class="mv-card" href="https://www.youtube.com/watch?v=gzDnwmDP9NQ" target="_blank" data-video-id="gzDnwmDP9NQ">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/gzDnwmDP9NQ/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
         <div class="mv-title">MIRROR'S EDGE</div>
       </a>
-      <a class="mv-card" href="https://www.youtube.com/watch?v=36OBx4FspiA" target="_blank">
-        <img class="mv-thumb" src="https://i.ytimg.com/vi/36OBx4FspiA/hqdefault.jpg" alt="" loading="lazy" />
+      <a class="mv-card" href="https://www.youtube.com/watch?v=36OBx4FspiA" target="_blank" data-video-id="36OBx4FspiA">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/36OBx4FspiA/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
         <div class="mv-title">IKAROS</div>
       </a>
-      <a class="mv-card" href="https://www.youtube.com/watch?v=nnHp84WGado" target="_blank">
-        <img class="mv-thumb" src="https://i.ytimg.com/vi/nnHp84WGado/hqdefault.jpg" alt="" loading="lazy" />
+      <a class="mv-card" href="https://www.youtube.com/watch?v=nnHp84WGado" target="_blank" data-video-id="nnHp84WGado">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/nnHp84WGado/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
         <div class="mv-title">BALLOON DOG</div>
       </a>
     </div>
@@ -63,6 +71,31 @@
     } catch {}
   }
   loadVersion();
+
+  // ── MV: ホバーで10秒地点からミュートプレビュー再生 ──
+  document.querySelectorAll('.mv-card').forEach(card => {
+    const wrap = card.querySelector('.mv-thumb-wrap');
+    const id = card.dataset.videoId;
+    if (!wrap || !id) return;
+    let timer = null;
+    let frame = null;
+
+    card.addEventListener('mouseenter', () => {
+      timer = setTimeout(() => {
+        frame = document.createElement('iframe');
+        frame.className = 'mv-preview-frame';
+        frame.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&start=10&controls=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}`;
+        frame.allow = 'autoplay; encrypted-media';
+        frame.setAttribute('frameborder', '0');
+        wrap.appendChild(frame);
+      }, 300);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      clearTimeout(timer);
+      if (frame) { frame.remove(); frame = null; }
+    });
+  });
 </script>
 </body>
 </html>

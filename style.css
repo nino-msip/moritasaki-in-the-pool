@@ -274,17 +274,34 @@ p {
   color: #fff;
 }
 
-.mv-thumb {
+.mv-thumb-wrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
-  display: block;
+  overflow: hidden;
   border: 1px solid #333;
+  background: #000;
   transition: border-color 0.2s;
 }
 
-.mv-card:hover .mv-thumb {
+.mv-card:hover .mv-thumb-wrap {
   border-color: #fff;
+}
+
+.mv-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mv-preview-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
 }
 
 .mv-title {
