@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Review — MoritaSaki in the pool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #0a0a0a; --card: #151515; --line: #2a2a2a;
+    --ink: #f2f0eb; --ink-dim: #8f8b83;
+    --a: #e71119; --b: #e5151b; --c: #e62429;
+    font-size: 16px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink);
+    font-family: 'Roboto', 'Noto Sans JP', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+
+  header { padding: clamp(40px, 7vw, 72px) clamp(20px, 5vw, 56px) clamp(28px, 4vw, 40px); border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--ink-dim); margin: 0 0 12px; }
+  h1 { font-family: 'Oswald', 'Noto Sans JP', sans-serif; font-weight: 700; font-style: italic; font-size: clamp(28px, 4.4vw, 42px);
+    margin: 0 0 14px; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { font-size: 14px; color: var(--ink-dim); max-width: 60ch; line-height: 1.75; margin: 0; }
+
+  main { padding: clamp(28px, 5vw, 48px) clamp(20px, 5vw, 56px) clamp(56px, 8vw, 88px); }
+
+  .patterns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: clamp(20px, 3vw, 28px); }
+
+  .pattern-card { background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--accent);
+    padding: 26px 26px 28px; display: flex; flex-direction: column; gap: 22px; }
+  .pattern-card.a { --accent: var(--a); }
+  .pattern-card.b { --accent: var(--b); }
+  .pattern-card.c { --accent: var(--c); }
+
+  .pattern-name { font-family: 'Oswald', 'Noto Sans JP', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.02em; }
+  .pattern-ref { font-size: 12.5px; color: var(--ink-dim); margin-top: 6px; line-height: 1.6; }
+
+  .go-btn { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border: 1.5px solid var(--accent); color: var(--accent); font-family: 'Oswald', 'Noto Sans JP', sans-serif;
+    font-weight: 600; font-size: 14px; letter-spacing: 0.08em;
+    padding: 13px 18px; transition: background 0.15s ease, color 0.15s ease; }
+  .go-btn:hover { background: var(--accent); color: #0a0a0a; }
+
+  footer { padding: 24px clamp(20px, 5vw, 56px) 48px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-dim); line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">MoritaSaki in the pool — Site Redesign</p>
+  <h1>デザイン案レビュー（パターンA / B / C）</h1>
+  <p class="lede">
+    文字・画像は現在公開中のサイトと同一です。各パターンのTOPから、ナビで About / Music / MV / Schedule / Goods / Contents / Setlist Tool へ移動できます。
+    右上のボタンで黒背景・白背景を切り替えられます。気に入ったパターン・気になった点があれば教えてください。
+  </p>
+</header>
+
+<main>
+  <div class="patterns">
+
+    <div class="pattern-card a">
+      <div>
+        <div class="pattern-name">Pattern A</div>
+        <div class="pattern-ref">Ref: BUMP OF CHICKEN 公式サイト<br>黒/白カードグリッド・コンデンス書体</div>
+      </div>
+      <a class="go-btn" href="a/top.html"><span>見る</span><span>↗</span></a>
+    </div>
+
+    <div class="pattern-card b">
+      <div>
+        <div class="pattern-name">Pattern B</div>
+        <div class="pattern-ref">Ref: The Walt Disney Company 公式サイト<br>黒/白記事リスト・セリフ見出し・ピル型ボタン</div>
+      </div>
+      <a class="go-btn" href="b/top.html"><span>見る</span><span>↗</span></a>
+    </div>
+
+    <div class="pattern-card c">
+      <div>
+        <div class="pattern-name">Pattern C</div>
+        <div class="pattern-ref">Ref: Marvel 公式サイト<br>黒ナビ＋白コンテンツ・斜めカット・極太見出し</div>
+      </div>
+      <a class="go-btn" href="c/top.html"><span>見る</span><span>↗</span></a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  検討用モックアップです。公開中のサイト（nino-msip.github.io/moritasaki-in-the-pool）はまだ変更されていません。
+</footer>
+
+</body>
+</html>
