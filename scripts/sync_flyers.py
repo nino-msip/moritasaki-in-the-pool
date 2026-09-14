@@ -7,26 +7,41 @@
 """
 import csv
 import io
+import os
 import re
+import sys
+import urllib.error
 import urllib.request
 from datetime import date
 from pathlib import Path
+
+from PIL import Image
 
 CSV_URL = (
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTBU3fniYvhEvFTq2Le3HzDHWzuyrh0nlVZgniNIg-2vDU1CWDxXqXTZvcTR6Nn58ucQ6Ej7nih8Wwj"
     "/pub?gid=2012153675&single=true&output=csv"
 )
 FLYER_DIR = Path(__file__).resolve().parent.parent / "flyers"
+API_KEY = os.environ.get("GDRIVE_API_KEY", "")
 
 DRIVE_ID_RE = re.compile(r"[?&]id=([\w-]+)|/d/([\w-]+)")
 DATE_RE = re.compile(r"(\d{4})[./\-年](\d{1,2})[./\-月](\d{1,2})")
 
-EXT_BY_CONTENT_TYPE = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-}
-KNOWN_EXTS = set(EXT_BY_CONTENT_TYPE.values())
+MAX_WIDTH = 1200
+JPEG_QUALITY = 82
+KNOWN_EXTS = {"jpg"}
+
+
+def optimize_image(data):
+    """モバイルでも軽く読み込めるよう、幅1200px・JPEG品質82に正規化する。"""
+    with Image.open(io.BytesIO(data)) as im:
+        im = im.convert("RGB")
+        if im.width > MAX_WIDTH:
+            h = round(im.height * MAX_WIDTH / im.width)
+            im = im.resize((MAX_WIDTH, h), Image.LANCZOS)
+        buf = io.BytesIO()
+        im.save(buf, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        return buf.getvalue()
 
 
 def drive_file_id(url):
@@ -58,14 +73,24 @@ def fetch(url, timeout=30):
 
 
 def download_drive_image(file_id):
-    data, content_type = fetch(f"https://drive.google.com/uc?export=download&id={file_id}")
-    if content_type == "text/html":
-        # 確認ページ/ログイン壁を返された = 取得失敗
+    # 公式のDrive APIを使う（消費者向けダウンロードリンクはボット判定で
+    # ブロックされやすく信頼できないため）。ファイルが「リンクを知っている
+    # 全員」に共有されていれば、APIキーだけで匿名取得できる。
+    url = f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media&key={API_KEY}"
+    try:
+        data, content_type = fetch(url)
+    except urllib.error.HTTPError as e:
+        return None, None
+    if not content_type.startswith("image/"):
         return None, None
     return data, content_type
 
 
 def main():
+    if not API_KEY:
+        print("GDRIVE_API_KEY が設定されていません。", file=sys.stderr)
+        sys.exit(1)
+
     text, _ = fetch(CSV_URL)
     reader = csv.DictReader(io.StringIO(text.decode("utf-8")))
     FLYER_DIR.mkdir(parents=True, exist_ok=True)
@@ -93,8 +118,14 @@ def main():
             fail += 1
             continue
 
-        ext = EXT_BY_CONTENT_TYPE.get(content_type, "jpg")
-        out_path = FLYER_DIR / f"{base}.{ext}"
+        try:
+            data = optimize_image(data)
+        except Exception as exc:
+            print(f"[fail] {base}: could not process image ({exc})")
+            fail += 1
+            continue
+
+        out_path = FLYER_DIR / f"{base}.jpg"
         if out_path.exists() and out_path.read_bytes() == data:
             skipped += 1
             continue
