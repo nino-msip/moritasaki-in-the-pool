@@ -28,7 +28,10 @@
       position: relative;
       overflow: hidden;
       border: 1px solid var(--paper-line);
+      text-decoration: none;
+      transition: transform 0.15s ease;
     }
+    a.show-plate:hover { transform: translateY(-3px); }
     .show-plate::after {
       content: "";
       position: absolute;
@@ -212,6 +215,8 @@
     const otherName = (e['その他の名前'] || e['その他チケット名'] || '').trim();
     if (otherUrl) tickets.push(`<a href="${esc(otherUrl)}" target="_blank" rel="noopener" class="ticket-pill">${esc(otherName || 'Ticket')}</a>`);
 
+    const primaryTicketUrl = zaiko || eplus || lp || otherUrl || null;
+
     const date = esc(formatDateJa(e['日付'] || ''));
     const title = esc(e['タイトル'] || '');
     const venue = esc(e['会場'] || '');
@@ -232,10 +237,13 @@
       ? `${flyerImg}<div class="show-plate-scrim"><span class="show-plate-title">${title || '(タイトル未定)'}</span></div>`
       : `<span class="show-plate-title">${title || '(タイトル未定)'}</span>`;
     const plateClass = flyerImg ? ' has-flyer' : '';
+    const plate = primaryTicketUrl
+      ? `<a class="show-plate${plateClass}" href="${esc(primaryTicketUrl)}" target="_blank" rel="noopener">${plateInner}</a>`
+      : `<div class="show-plate${plateClass}">${plateInner}</div>`;
 
     return `
       <article class="show-card">
-        <div class="show-plate${plateClass}">${plateInner}</div>
+        ${plate}
         <div class="show-meta">
           <span class="show-date">${date}</span>
           <span class="show-venue">${venue}${city ? ' <span class="show-city">/ ' + city + '</span>' : ''}</span>
