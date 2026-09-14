@@ -168,16 +168,13 @@ p {
 
 /* Hero */
 #hero {
-  background: var(--ink-ground);
-  color: #fff;
+  background: var(--paper);
+  color: var(--black);
   display: flex;
   flex-direction: column;
   justify-content: center;
   border-bottom: 3px solid var(--red);
 }
-
-#hero h1 { color: #fff; }
-#hero p { color: var(--ink-dim-onblack); }
 
 .hero-logo {
   margin-bottom: 16px;
@@ -210,7 +207,7 @@ p {
   font-weight: 400;
   font-size: clamp(22px, 3.4vw, 34px);
   line-height: 1.2;
-  color: #fff;
+  color: var(--black);
   text-transform: none;
   margin-bottom: 32px;
   max-width: 18ch;
@@ -226,9 +223,9 @@ p {
 .instructions-list li {
   counter-increment: inst;
   font-size: 14px;
-  color: var(--ink-dim-onblack);
+  color: var(--ink-dim-onwhite);
   padding: 18px 0;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--paper-line);
   border-bottom: none;
   display: flex;
   gap: 18px;
