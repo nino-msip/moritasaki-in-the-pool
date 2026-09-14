@@ -532,7 +532,7 @@ th {
   padding: 14px 16px;
   border-bottom: 1px solid var(--paper-line);
   font-size: 14px;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .live-date {
