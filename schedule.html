@@ -119,10 +119,14 @@
     const notes = esc(e['備考'] || '');
     const performers = esc(e['共演者'] || '');
 
+    // 行の文字量（タイトル・共演者・備考・会場）に応じてフライヤーのサイズを揃える
+    const contentLen = title.length + performers.length + notes.length + venue.length;
+    const flyerSizeClass = contentLen > 140 ? ' flyer-lg' : contentLen > 70 ? ' flyer-md' : '';
+
     const flyerId = driveFileId(e['フライヤー'] || '');
     const flyerCell = flyerId
       ? `<a href="https://drive.google.com/file/d/${esc(flyerId)}/view" target="_blank" rel="noopener">
-           <img class="live-flyer" src="https://drive.google.com/thumbnail?id=${esc(flyerId)}&sz=w200" alt="flyer" loading="lazy" />
+           <img class="live-flyer${flyerSizeClass}" src="https://drive.google.com/thumbnail?id=${esc(flyerId)}&sz=w200" alt="flyer" loading="lazy" />
          </a>`
       : '';
 
