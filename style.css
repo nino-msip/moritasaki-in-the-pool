@@ -450,6 +450,18 @@ th {
   color: var(--red-dark);
 }
 
+.sns-links .handle {
+  color: var(--red);
+}
+
+.mail-link {
+  color: var(--black);
+}
+
+.mail-link:hover {
+  color: var(--red-dark);
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
   nav {
