@@ -8,6 +8,91 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Schedule: Pattern A の一覧デザイン（このページのみ）── */
+    .show-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: clamp(20px, 3vw, 32px);
+      margin-bottom: 48px;
+    }
+    .show-card { display: flex; flex-direction: column; }
+    .show-plate {
+      background: #fff;
+      color: var(--black);
+      aspect-ratio: 4 / 3;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--paper-line);
+    }
+    .show-plate::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 6px;
+      background: var(--red);
+    }
+    .show-plate.has-flyer { padding: 0; }
+    .show-flyer-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .show-plate-scrim {
+      position: relative;
+      z-index: 1;
+      padding: 16px 18px 20px;
+      background: linear-gradient(to top, rgba(13,13,13,0.85), rgba(13,13,13,0));
+    }
+    .show-plate.has-flyer .show-plate-title { color: #fff; }
+    .show-plate-title {
+      font-family: 'Anton', 'Noto Sans JP', sans-serif;
+      font-weight: 400;
+      font-size: clamp(18px, 2.2vw, 22px);
+      line-height: 1.2;
+    }
+    .show-meta {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .show-date {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      color: var(--red);
+    }
+    .show-venue { font-size: 13px; color: var(--black); }
+    .show-city { color: var(--ink-dim-onwhite); }
+    .show-performers, .show-notes {
+      font-size: 12px;
+      color: var(--ink-dim-onwhite);
+      margin-top: 2px;
+    }
+    .show-tickets { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .ticket-pill {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--black);
+      border: 1px solid var(--paper-line);
+      padding: 7px 15px;
+      text-decoration: none;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .ticket-pill:hover { border-color: var(--red); color: var(--red); }
+    .show-tba { font-size: 12px; color: #999; }
+  </style>
 </head>
 <body>
 
@@ -104,13 +189,13 @@
     const zaiko = safeUrl(e['Zaiko']);
     const eplus = safeUrl(e['e+']);
     const lp = safeUrl(e['ライブポケット']);
-    if (zaiko) tickets.push(`<a href="${esc(zaiko)}" target="_blank" rel="noopener" class="ticket-btn">Zaiko</a>`);
-    if (eplus) tickets.push(`<a href="${esc(eplus)}" target="_blank" rel="noopener" class="ticket-btn">イープラス</a>`);
-    if (lp) tickets.push(`<a href="${esc(lp)}" target="_blank" rel="noopener" class="ticket-btn">LivePocket</a>`);
+    if (zaiko) tickets.push(`<a href="${esc(zaiko)}" target="_blank" rel="noopener" class="ticket-pill">Zaiko</a>`);
+    if (eplus) tickets.push(`<a href="${esc(eplus)}" target="_blank" rel="noopener" class="ticket-pill">イープラス</a>`);
+    if (lp) tickets.push(`<a href="${esc(lp)}" target="_blank" rel="noopener" class="ticket-pill">LivePocket</a>`);
 
     const otherUrl = safeUrl(e['その他　チケットリンク'] || e['その他チケットURL']);
     const otherName = (e['その他の名前'] || e['その他チケット名'] || '').trim();
-    if (otherUrl) tickets.push(`<a href="${esc(otherUrl)}" target="_blank" rel="noopener" class="ticket-btn">${esc(otherName || 'Ticket')}</a>`);
+    if (otherUrl) tickets.push(`<a href="${esc(otherUrl)}" target="_blank" rel="noopener" class="ticket-pill">${esc(otherName || 'Ticket')}</a>`);
 
     const date = esc(formatDateJa(e['日付'] || ''));
     const title = esc(e['タイトル'] || '');
@@ -119,31 +204,30 @@
     const notes = esc(e['備考'] || '');
     const performers = esc(e['共演者'] || '');
 
-    // 行の文字量（タイトル・共演者・備考・会場）に応じてフライヤーのサイズを揃える
-    const contentLen = title.length + performers.length + notes.length + venue.length;
-    const flyerSizeClass = contentLen > 140 ? ' flyer-lg' : contentLen > 70 ? ' flyer-md' : '';
-
     const flyerId = driveFileId(e['フライヤー'] || '');
-    const flyerCell = flyerId
-      ? `<a href="https://drive.google.com/file/d/${esc(flyerId)}/view" target="_blank" rel="noopener">
-           <img class="live-flyer${flyerSizeClass}" src="https://drive.google.com/thumbnail?id=${esc(flyerId)}&sz=w200" alt="flyer" loading="lazy" />
-         </a>`
+    const flyerImg = flyerId
+      ? `<img class="show-flyer-bg" src="https://drive.google.com/thumbnail?id=${esc(flyerId)}&sz=w600" alt="" loading="lazy" />`
       : '';
+    const plateInner = flyerId
+      ? `${flyerImg}<div class="show-plate-scrim"><span class="show-plate-title">${title || '(タイトル未定)'}</span></div>`
+      : `<span class="show-plate-title">${title || '(タイトル未定)'}</span>`;
+    const plateLink = flyerId
+      ? `<a class="show-plate has-flyer" href="https://drive.google.com/file/d/${esc(flyerId)}/view" target="_blank" rel="noopener">${plateInner}</a>`
+      : `<div class="show-plate">${plateInner}</div>`;
 
     return `
-      <tr>
-        <td class="live-flyer-cell">${flyerCell}</td>
-        <td class="live-date">${date}</td>
-        <td>
-          ${title ? `<div class="live-title">${title}</div>` : ''}
-          ${performers ? `<div class="live-performers">w/ ${performers}</div>` : ''}
-          ${notes ? `<div class="live-notes">${notes}</div>` : ''}
-        </td>
-        <td class="live-venue">${venue}${city ? ' <span class="live-city">/ ' + city + '</span>' : ''}</td>
-        <td class="live-tickets-cell">
-          ${tickets.length ? tickets.join(' ') : '<span class="live-tba">準備中</span>'}
-        </td>
-      </tr>`;
+      <article class="show-card">
+        ${plateLink}
+        <div class="show-meta">
+          <span class="show-date">${date}</span>
+          <span class="show-venue">${venue}${city ? ' <span class="show-city">/ ' + city + '</span>' : ''}</span>
+          ${performers ? `<span class="show-performers">w/ ${performers}</span>` : ''}
+          ${notes ? `<span class="show-notes">${notes}</span>` : ''}
+        </div>
+        <div class="show-tickets">
+          ${tickets.length ? tickets.join('') : '<span class="show-tba">準備中</span>'}
+        </div>
+      </article>`;
   }
 
   async function loadLiveSchedule() {
@@ -192,15 +276,7 @@
         container.innerHTML = '<p class="live-empty">現在ライブの予定はありません。</p>';
         return;
       }
-      container.innerHTML = `
-        <div class="live-table-wrap">
-          <table class="live-table">
-            <thead>
-              <tr><th></th><th>Date</th><th>Event</th><th>Venue</th><th>Ticket</th></tr>
-            </thead>
-            <tbody>${events.map(renderEvent).join('')}</tbody>
-          </table>
-        </div>`;
+      container.innerHTML = `<div class="show-grid">${events.map(renderEvent).join('')}</div>`;
     } catch {
       container.innerHTML = '<p class="live-empty">ライブ情報の取得に失敗しました。</p>';
     }
