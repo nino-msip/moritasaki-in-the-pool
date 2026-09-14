@@ -24,6 +24,14 @@
     <span id="site-ver" class="site-ver"></span>
   </nav>
 
+  <script>
+    // ナビのアクティブなタブが横スクロールで隠れないよう表示範囲に入れる
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
   <!-- Hero -->
   <section id="hero">
     <h1 class="hero-logo"><img src="logo.avif" alt="MoritaSaki in the pool" /></h1>

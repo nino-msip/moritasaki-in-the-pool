@@ -250,6 +250,14 @@
     <a href="setlist.html" class="active">Setlist Tool</a>
   </nav>
 
+  <script>
+    // ナビのアクティブなタブが横スクロールで隠れないよう表示範囲に入れる
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
   <section style="min-height: auto; padding-bottom: 120px;">
     <div class="tool-container">
       <a href="index.html" class="back-link">← Back to site</a>

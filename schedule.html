@@ -109,6 +109,14 @@
     <span id="site-ver" class="site-ver"></span>
   </nav>
 
+  <script>
+    // ナビのアクティブなタブが横スクロールで隠れないよう表示範囲に入れる
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
   <!-- Live Schedule -->
   <section id="schedule">
     <h2>Live Schedule</h2>
@@ -140,12 +148,19 @@
     return u && /^https?:\/\//.test(u.trim()) ? u.trim() : null;
   }
 
-  // Google Drive の共有URLからファイルIDを抽出
-  function driveFileId(u) {
-    if (!u) return null;
-    const m = String(u).match(/[?&]id=([\w-]+)|\/d\/([\w-]+)/);
-    return m ? (m[1] || m[2]) : null;
-  }
+  // flyers/YYYY-MM-DD.(jpg|png|jpeg|webp) を順に試し、見つからなければ画像なし扱いにする
+  window.__flyerFallback = function (img) {
+    const exts = (img.dataset.exts || '').split(',').filter(Boolean);
+    if (exts.length) {
+      const next = exts.shift();
+      img.dataset.exts = exts.join(',');
+      img.src = img.dataset.base + '.' + next;
+    } else {
+      const plate = img.closest('.show-plate');
+      if (plate) plate.classList.remove('has-flyer');
+      img.remove();
+    }
+  };
 
   // "2026.08.01" "2026/8/1" "2026-08-01" などを Date に変換
   function parseEventDate(s) {
@@ -204,20 +219,23 @@
     const notes = esc(e['備考'] || '');
     const performers = esc(e['共演者'] || '');
 
-    const flyerId = driveFileId(e['フライヤー'] || '');
-    const flyerImg = flyerId
-      ? `<img class="show-flyer-bg" src="https://drive.google.com/thumbnail?id=${esc(flyerId)}&sz=w600" alt="" loading="lazy" />`
+    // 「フライヤー」列に何か入力されているイベントだけ、flyers/YYYY-MM-DD.* を画像として埋め込む
+    const hasFlyer = !!(e['フライヤー'] || '').trim();
+    const flyerDate = parseEventDate(e['日付'] || '');
+    const flyerBase = flyerDate
+      ? `flyers/${flyerDate.getFullYear()}-${String(flyerDate.getMonth() + 1).padStart(2, '0')}-${String(flyerDate.getDate()).padStart(2, '0')}`
+      : null;
+    const flyerImg = (hasFlyer && flyerBase)
+      ? `<img class="show-flyer-bg" src="${flyerBase}.jpg" data-base="${flyerBase}" data-exts="jpeg,png,webp" onerror="window.__flyerFallback(this)" alt="" loading="lazy" />`
       : '';
-    const plateInner = flyerId
+    const plateInner = flyerImg
       ? `${flyerImg}<div class="show-plate-scrim"><span class="show-plate-title">${title || '(タイトル未定)'}</span></div>`
       : `<span class="show-plate-title">${title || '(タイトル未定)'}</span>`;
-    const plateLink = flyerId
-      ? `<a class="show-plate has-flyer" href="https://drive.google.com/file/d/${esc(flyerId)}/view" target="_blank" rel="noopener">${plateInner}</a>`
-      : `<div class="show-plate">${plateInner}</div>`;
+    const plateClass = flyerImg ? ' has-flyer' : '';
 
     return `
       <article class="show-card">
-        ${plateLink}
+        <div class="show-plate${plateClass}">${plateInner}</div>
         <div class="show-meta">
           <span class="show-date">${date}</span>
           <span class="show-venue">${venue}${city ? ' <span class="show-city">/ ' + city + '</span>' : ''}</span>
