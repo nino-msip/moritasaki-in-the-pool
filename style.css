@@ -260,10 +260,12 @@ p {
 .member-avatar {
   width: 88px;
   height: 88px;
-  border-radius: 50%;
+  border-radius: 8px;
   object-fit: cover;
+  image-rendering: pixelated;
   display: block;
   margin-bottom: 16px;
+  background: var(--paper);
   border: 1px solid var(--paper-line);
 }
 
