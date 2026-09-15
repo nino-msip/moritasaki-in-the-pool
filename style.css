@@ -396,6 +396,24 @@ p {
   flex-shrink: 0;
 }
 
+.link-icon-lg {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.others-subhead {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim-onwhite);
+  margin-bottom: 16px;
+}
+
 /* MV */
 .mv-grid {
   display: grid;
