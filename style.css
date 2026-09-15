@@ -216,7 +216,6 @@ p {
   color: var(--black);
   text-transform: none;
   margin-bottom: 32px;
-  max-width: 18ch;
 }
 
 .instructions-list {
