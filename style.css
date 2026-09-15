@@ -502,6 +502,48 @@ th {
   color: var(--red-dark);
 }
 
+.contact-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  background: var(--ink-ground);
+  color: #fff;
+  text-decoration: none;
+  padding: 20px 30px;
+  margin-bottom: 48px;
+  clip-path: polygon(16px 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+  transition: background 0.15s ease;
+}
+
+.contact-cta:hover {
+  background: var(--red);
+}
+
+.contact-cta-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.contact-cta-label {
+  display: block;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim-onblack);
+  margin-bottom: 5px;
+}
+
+.contact-cta-mail {
+  display: block;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: 0.01em;
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
   nav {
