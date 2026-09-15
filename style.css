@@ -237,6 +237,12 @@ p {
   gap: 18px;
 }
 
+.inst-en,
+.inst-ja {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .inst-ja {
   margin-top: 4px;
   font-size: 12.5px;
@@ -248,6 +254,21 @@ p {
   color: var(--red);
   min-width: 32px;
   font-size: 22px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .instructions-list li {
+    flex-wrap: wrap;
+  }
+  .inst-en,
+  .inst-ja {
+    flex-basis: 100%;
+  }
+  .inst-ja {
+    margin-left: 50px;
+    margin-top: 6px;
+  }
 }
 
 /* Members */
