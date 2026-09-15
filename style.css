@@ -354,6 +354,20 @@ p {
   background: var(--red);
 }
 
+.music-links-soon {
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  background: transparent;
+  color: var(--ink-dim-onwhite);
+  border: 1px dashed var(--paper-line);
+  padding: 12px 25px 12px 29px;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+}
+
 .link-icon {
   width: 20px;
   height: 20px;
