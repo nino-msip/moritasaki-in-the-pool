@@ -10,27 +10,26 @@
   <link rel="stylesheet" href="style.css" />
   <style>
     .about-banner {
-      width: 100%;
-      max-width: 900px;
-      aspect-ratio: 16 / 7;
-      overflow: hidden;
       position: relative;
-      margin-bottom: 40px;
-      clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), 0 100%);
-    }
-    .about-banner::after {
-      content: "";
-      position: absolute;
-      left: 0; right: 0; bottom: 0;
-      height: 4px;
-      background: var(--red);
+      min-height: 260px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      margin-bottom: 24px;
     }
     .about-banner img {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center 20%;
-      display: block;
+      opacity: 0.15;
+    }
+    .about-banner h2 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
     }
   </style>
 </head>
@@ -59,10 +58,9 @@
   <!-- About -->
   <section id="about">
     <div class="about-banner">
-      <img src="icons/photos/band-photo.jpg" alt="MoritaSaki in the pool" />
+      <img src="icons/photos/band-photo.jpg" alt="" />
+      <h2>About</h2>
     </div>
-
-    <h2>About</h2>
 
     <div class="member-grid">
       <div class="member-card">
