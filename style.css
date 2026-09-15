@@ -228,6 +228,7 @@ p {
 .instructions-list li {
   counter-increment: inst;
   font-size: 14px;
+  font-weight: 500;
   color: var(--ink-dim-onwhite);
   padding: 18px 0;
   border-top: 1px solid var(--paper-line);
