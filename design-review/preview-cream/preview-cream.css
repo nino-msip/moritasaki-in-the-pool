@@ -1,5 +1,12 @@
-/* ── Preview: cream nav + colorful per-tab pills ──
+/* ── Preview: cream body + colorful per-tab pills ──
    本体(style.css)は変更せず、このプレビュー用ページだけに上書きで適用 */
+
+/* --paper はサイト全体の背景に使われている変数なので、ここで
+   上書きするだけで本文の背景もナビと同じクリームに揃う */
+:root {
+  --paper: #fff3b8;
+  --paper-line: #e9d98f;
+}
 
 nav {
   background: #fff3b8 !important;
