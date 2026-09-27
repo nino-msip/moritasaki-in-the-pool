@@ -33,10 +33,30 @@ nav a:nth-of-type(5),
 nav a:nth-of-type(6),
 nav a:nth-of-type(7),
 nav a:nth-of-type(8) {
-  padding: 6px 14px;
-  border-radius: 999px;
+  padding: 7px 16px 8px;
+  border-radius: 3px;
   border-bottom: none !important;
-  transition: background 0.15s ease, color 0.15s ease;
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.18);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+/* 付箋を貼ったようにタブごとに少し傾ける（インデックス風） */
+nav a:nth-of-type(2) { transform: rotate(-2deg); }
+nav a:nth-of-type(3) { transform: rotate(2deg); }
+nav a:nth-of-type(4) { transform: rotate(-2deg); }
+nav a:nth-of-type(5) { transform: rotate(2deg); }
+nav a:nth-of-type(6) { transform: rotate(-2deg); }
+nav a:nth-of-type(7) { transform: rotate(2deg); }
+nav a:nth-of-type(8) { transform: rotate(-2deg); }
+
+nav a:nth-of-type(2):hover, nav a:nth-of-type(2).active,
+nav a:nth-of-type(3):hover, nav a:nth-of-type(3).active,
+nav a:nth-of-type(4):hover, nav a:nth-of-type(4).active,
+nav a:nth-of-type(5):hover, nav a:nth-of-type(5).active,
+nav a:nth-of-type(6):hover, nav a:nth-of-type(6).active,
+nav a:nth-of-type(7):hover, nav a:nth-of-type(7).active,
+nav a:nth-of-type(8):hover, nav a:nth-of-type(8).active {
+  transform: rotate(0deg) translateY(-2px);
 }
 
 /* 選択中 / ホバー時は背景と文字色を反転 */
