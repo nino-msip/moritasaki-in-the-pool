@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setlist Tool — MoritaSaki in the pool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="preview-cream.css" />
+  <style>
+    .tool-container { max-width: 900px; }
+
+    /* ── Input UI ── */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .meta-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    input[type="text"], input[type="date"], select {
+      background: #fff;
+      border: 1px solid #dedcd7;
+      color: #0d0d0d;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      outline: none;
+    }
+    input[type="text"] { flex: 1; min-width: 200px; }
+    input[type="date"] { min-width: 160px; }
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    select:focus { border-color: #e62429; }
+    input::placeholder { color: #999; }
+    .se-group {
+      display: flex; align-items: center; gap: 16px;
+      min-height: 41px; color: #5c5c5c; font-size: 14px;
+    }
+    .se-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .se-group input[type="radio"] { accent-color: #e62429; }
+    .meta-label {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 11px;
+      color: #5c5c5c;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    button {
+      background: #0d0d0d; color: #fff; border: none;
+      clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+      padding: 10px 22px; font-size: 13px;
+      font-family: 'Roboto Condensed', sans-serif; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    button:hover { background: #e62429; }
+    button.secondary {
+      background: transparent; color: #0d0d0d; border: 1px solid #dedcd7;
+      clip-path: none;
+    }
+    button.secondary:hover { border-color: #0d0d0d; background: transparent; color: #0d0d0d; }
+    button.pdf-btn {
+      background: #e62429; color: #fff; border: none;
+    }
+    button.pdf-btn:hover { background: #a60000; }
+
+    /* ── Drag list ── */
+    #song-list { list-style: none; margin-bottom: 24px; padding: 0; }
+    #song-list li {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border: 1px solid #dedcd7; background: #fff;
+      margin-bottom: 3px; cursor: grab; user-select: none;
+    }
+    #song-list li.mc-row { color: #999; }
+    #song-list li.dragging { opacity: 0.4; border-color: #e62429; }
+    #song-list li.drag-over { border-color: #e62429; background: #f5f4f2; }
+    .song-num { color: #999; font-size: 12px; min-width: 28px; }
+    .song-name { flex: 1; font-size: 14px; }
+    .song-meta { font-size: 11px; color: #999; white-space: nowrap; }
+    .remove-btn {
+      background: transparent; color: #999; border: none;
+      padding: 0 4px; font-size: 18px; cursor: pointer; line-height: 1;
+    }
+    .remove-btn:hover { color: #e62429; }
+
+    /* ── Tabs ── */
+    .tab-nav {
+      display: flex; gap: 4px; margin-top: 48px;
+      border-bottom: 3px solid #0d0d0d;
+    }
+    .tab-btn {
+      background: transparent; color: #5c5c5c;
+      border: none;
+      font-family: 'Roboto Condensed', sans-serif; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 10px 24px; font-size: 12px; cursor: pointer;
+    }
+    .tab-btn:hover { color: #0d0d0d; }
+    .tab-btn.active { color: #e62429; }
+    .tab-panel { padding: 24px 0; display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Sheet header (inside output) ── */
+    .print-sheet { font-family: 'Arial', sans-serif; }
+
+    .sheet-meta { margin-bottom: 2px; padding: 0; text-align: center; }
+    .sheet-meta-date  { font-size: 18px; color: #111; padding: 4px 0; font-weight: 700; }
+    .sheet-meta-venue { font-size: 18px; color: #111; padding: 2px 0; font-weight: 700; }
+    .sheet-meta-sub   { font-size: 14px; color: #111; padding: 2px 0; font-weight: 600; }
+    .sheet-logo-bar {
+      display: block; text-align: center;
+      background: #cc1111; color: #fff;
+      font-weight: 900; font-style: italic;
+      font-size: 28px; padding: 22px 20px;
+      margin: 10px 0 0 0; letter-spacing: 0.02em;
+    }
+    .sheet-logo-img {
+      display: block;
+      width: 62%;
+      max-width: 600px;
+      height: auto;
+      margin: 10px auto 28px;
+    }
+
+    /* ── Combined table (照明・音響) ── */
+    .sheet-wrap { overflow-x: auto; margin-bottom: 16px; }
+    .output-table {
+      border-collapse: collapse; font-size: 12px;
+      background: #fff; color: #000;
+      width: 100%; max-width: none; min-width: 760px;
+      table-layout: fixed;
+    }
+    .output-table th {
+      background: #f3f3f3; color: #000; font-weight: 600;
+      font-size: 12px; text-align: center; padding: 8px 12px;
+      border: 1px solid #b7b7b7; white-space: nowrap;
+    }
+    .output-table td {
+      padding: 8px 12px; border: 1px solid #d0d0d0;
+      font-size: 12px; text-align: center; vertical-align: middle;
+      background: #fff; color: #000; line-height: 1.5;
+    }
+    .output-table td.text-left { text-align: left; white-space: pre-line; }
+    .output-table tr.mc-row td { background: #f9f9f9; color: #999; font-style: italic; }
+    .output-table tr.note-row td {
+      background: #fff8c5; color: #c00000;
+      font-size: 13px; font-weight: 700; text-align: center;
+      border: 2px solid #c00000; padding: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Count table (セットリスト) ── */
+    .count-table {
+      border-collapse: collapse; font-size: 18px;
+      background: #fff; color: #000;
+      width: 100%; border: 3px solid #000;
+    }
+    .count-table thead tr { border-bottom: 3px solid #000; }
+    .count-table th {
+      font-style: italic; font-weight: 700;
+      text-align: center; padding: 8px;
+      border: none; border-right: 1px solid #000;
+      background: #fff; color: #000; font-size: 12px;
+    }
+    .count-table th:last-child { border-right: none; }
+    .count-table td {
+      padding: 18px 8px; border: none;
+      border-bottom: 1px dotted #000;
+      border-right: 1px solid #000;
+      text-align: center; vertical-align: middle;
+      background: #fff; color: #000;
+    }
+    .count-table td:last-child { border-right: none; }
+    .count-table tr:last-child td { border-bottom: none; }
+    .count-table td.col-num {
+      width: 72px; font-weight: 700; font-size: 18px; color: #111;
+    }
+    .count-table td.col-song {
+      font-weight: 700; font-size: 20px;
+    }
+    .count-table td.col-count {
+      width: 96px; font-weight: 700; font-size: 18px;
+    }
+    .count-table tr.mc-row td {
+      font-weight: 700; font-size: 18px;
+      border-bottom: 1px dotted #000;
+    }
+
+    .total-time {
+      font-size: 12px; color: #5c5c5c;
+      text-align: right; margin-bottom: 8px;
+    }
+    .actions-row {
+      display: flex; gap: 8px; margin-top: 12px;
+      flex-wrap: wrap; align-items: center;
+    }
+    .copy-msg {
+      font-size: 12px; color: #5c5c5c;
+      opacity: 0; transition: opacity 0.3s;
+    }
+
+    .back-link {
+      display: inline-block; color: #5c5c5c;
+      text-decoration: none; font-size: 13px; margin-bottom: 40px;
+    }
+    .back-link:hover { color: #e62429; }
+
+    /* ── Print ── */
+    /* @page margin:0 でブラウザのヘッダー/フッター（about:blank・日時等）を非表示にし、
+       代わりに body 側に余白を持たせる */
+    @page { size: A4; margin: 0; }
+    @media print {
+      nav, .input-area, .meta-area, #song-list,
+      .generate-area, .tab-nav, .actions-row,
+      .back-link, h2, section > div > p, #mp3-section { display: none !important; }
+
+      body, section { background: #fff !important; padding: 0 !important; }
+      .tab-panel { display: none !important; }
+      .tab-panel.print-target { display: block !important; }
+      #output-section { display: block !important; }
+      .tool-container { max-width: 100% !important; padding: 15mm; }
+
+      .output-table th, .output-table td { font-size: 11px; padding: 6px 10px; }
+      .sheet-logo-bar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .output-table tr.note-row td { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-mark" href="index.html" aria-label="TOPへ戻る"><img src="../../logo.avif" alt="MoritaSaki in the pool" /></a>
+    <a href="index.html">TOP</a>
+    <a href="about.html">About</a>
+    <a href="music.html">Music</a>
+    <a href="mv.html">MV</a>
+    <a href="schedule.html">Schedule</a>
+    <a href="goods.html">Merchandise</a>
+    <a href="others.html" class="active">Others</a>
+  </nav>
+
+  <script>
+    // ナビのアクティブなタブが横スクロールで隠れないよう表示範囲に入れる
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
+  <section style="min-height: auto; padding-bottom: 120px;">
+    <div class="tool-container">
+      <a href="index.html" class="back-link">← Back to site</a>
+      <h2>Setlist Tool</h2>
+      <p>ライブ情報を入力し、曲を追加してシートを生成してください。</p>
+
+      <!-- ライブ情報 -->
+      <div class="meta-area" style="margin-top: 32px; display:flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
+        <div>
+          <span class="meta-label">日程</span>
+          <input type="date" id="live-date" />
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <span class="meta-label">会場</span>
+          <input type="text" id="live-venue" placeholder="会場名を入力..." style="width:100%;" />
+        </div>
+        <div style="min-width:180px;">
+          <span class="meta-label">出演順</span>
+          <input type="text" id="live-order" placeholder="例: 3番目（全5組）" style="width:100%;" />
+        </div>
+        <div>
+          <span class="meta-label">SE（入場曲）</span>
+          <div class="se-group">
+            <label><input type="radio" name="se-flag" value="無し" checked onchange="onSEChange()" /> 無し</label>
+            <label><input type="radio" name="se-flag" value="有り" onchange="onSEChange()" /> 有り</label>
+            <span id="se-media-wrap" style="display:none;">
+              <select id="se-media" onchange="onSEMediaChange()">
+                <option value="CD">CD</option>
+                <option value="スマホ・携帯">スマホ・携帯</option>
+                <option value="その他">その他</option>
+              </select>
+            </span>
+            <input type="text" id="se-media-other" placeholder="持参メディアを入力..." style="display:none; min-width:160px; flex:0 1 auto;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 曲追加 -->
+      <div class="input-area">
+        <div class="input-row">
+          <input type="text" id="song-input" list="song-suggestions" placeholder="曲名を検索・入力..." autocomplete="off" />
+          <datalist id="song-suggestions"></datalist>
+          <button onclick="addSong()">追加</button>
+          <button class="secondary" onclick="addMC()">MC を挿入</button>
+        </div>
+      </div>
+
+      <ul id="song-list"></ul>
+
+      <div class="generate-area" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+        <button onclick="generateSheets()">シートを生成</button>
+        <button class="secondary" onclick="clearAll()">クリア</button>
+      </div>
+
+      <!-- Output -->
+      <div id="output-section" style="display:none;">
+        <div class="tab-nav">
+          <button class="tab-btn active" onclick="switchTab('combined', this)">照明・音響要望シート</button>
+          <button class="tab-btn" onclick="switchTab('count', this)">セットリスト</button>
+        </div>
+
+        <!-- 照明・音響要望シート -->
+        <div id="tab-combined" class="tab-panel active">
+          <div class="total-time" id="total-combined"></div>
+          <div class="print-sheet" id="sheet-combined"></div>
+          <div class="actions-row">
+            <button class="pdf-btn" onclick="printTab('combined')">PDFとして保存</button>
+            <button class="secondary" onclick="createGoogleSheet('combined')">Googleスプレッドシート作成</button>
+            <button class="secondary" onclick="downloadXlsxSheet('combined')">編集用スプレッドシート（.xlsx）</button>
+            <span id="gs-link-combined" style="font-size:12px;"></span>
+            <button class="secondary" onclick="downloadCsv('combined')">CSVダウンロード（Excel用）</button>
+            <button class="secondary" onclick="copySheet('combined')">テキストをコピー（スプレッドシート貼付用）</button>
+            <span class="copy-msg" id="msg-combined"></span>
+          </div>
+        </div>
+
+        <!-- セットリスト -->
+        <div id="tab-count" class="tab-panel">
+          <div class="print-sheet" id="sheet-count"></div>
+          <div class="actions-row">
+            <button class="pdf-btn" onclick="printTab('count')">PDFとして保存</button>
+            <button class="secondary" onclick="createGoogleSheet('count')">Googleスプレッドシート作成</button>
+            <button class="secondary" onclick="downloadXlsxSheet('count')">編集用スプレッドシート（.xlsx）</button>
+            <span id="gs-link-count" style="font-size:12px;"></span>
+            <button class="secondary" onclick="downloadCsv('count')">CSVダウンロード（Excel用）</button>
+            <button class="secondary" onclick="copySheet('count')">テキストをコピー（スプレッドシート貼付用）</button>
+            <span class="copy-msg" id="msg-count"></span>
+          </div>
+        </div>
+
+        <!-- スタッフ用（セット図・音源ダウンロード） -->
+        <div id="mp3-section" style="margin-top:40px; border-top:1px solid #222; padding-top:32px;">
+          <p style="color:#555; font-size:13px; margin-bottom:16px;">🔒 スタッフ用 — セット図・音源ファイルのダウンロード</p>
+          <div id="mp3-auth">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <input type="password" id="mp3-pw" placeholder="パスワードを入力..." style="flex:1; min-width:200px;" onkeydown="if(event.key==='Enter')checkMp3Password()" />
+              <button onclick="checkMp3Password()">確認</button>
+            </div>
+            <p id="mp3-pw-error" style="color:#cc1111; font-size:12px; margin-top:8px; display:none;">パスワードが違います</p>
+          </div>
+          <div id="mp3-download" style="display:none;">
+
+            <!-- 会場セット図 -->
+            <div id="setzu-block" style="margin-bottom:36px;">
+              <p style="color:#aaa; font-size:12px; margin-bottom:12px;">会場を選択すると、対応するセット図を表示します</p>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <span class="meta-label" style="margin:0;">会場</span>
+                <select id="setzu-venue" onchange="renderSetzu()" style="min-width:220px;"></select>
+              </div>
+              <p id="setzu-status" style="font-size:12px; color:#777; margin-top:8px;"></p>
+              <div id="setzu-view" style="margin-top:16px;"></div>
+              <div class="actions-row" style="margin-top:16px;">
+                <button class="pdf-btn" onclick="printStaffSheet()">スタッフ用シートをPDF保存（1p:セット図 / 2p:音響要望）</button>
+                <button class="secondary" onclick="createGoogleSheet('staff')">Googleスプレッドシート作成</button>
+                <button class="secondary" onclick="downloadStaffXlsx()">編集用スプレッドシート（.xlsx）</button>
+                <span id="gs-link-staff" style="font-size:12px;"></span>
+                <button class="secondary" onclick="downloadStaffCsv()">スタッフ用CSVをダウンロード</button>
+              </div>
+            </div>
+
+            <!-- MP3 ダウンロード -->
+            <p style="color:#aaa; font-size:12px; margin-bottom:12px;">セットリストの曲をZIPでダウンロードします</p>
+            <div class="actions-row">
+              <button class="pdf-btn" onclick="downloadMp3Zip()">MP3をまとめてダウンロード</button>
+              <span id="mp3-status" style="font-size:12px; color:#aaa;"></span>
+            </div>
+            <ul id="mp3-file-list" style="margin-top:16px; list-style:none; padding:0; font-size:12px; color:#555;"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+
+  <script>
+    const SONG_DB = {
+      "September":                        { lighting: "（ドラム2カウントスタート）\nウォータースライダーのような",                          sound: "他の曲より爆リバーブで\n歌が埋まるように",                                              count: "2",      duration: "2:30" },
+      "She set under the bridge":         { lighting: "（ドラム4カウントスタート）\nきらきら水の照り返し",                                    sound: "-",                                                                                count: "-",      duration: "3:45" },
+      "I irk Saki.":                      { lighting: "（ドラム2カウントスタート）\n街と青空と",                                              sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "3:35" },
+      "Ivy in Navy Skirt":                { lighting: "（ドラム2カウントスタート）\n白い感じの晴れ",                                          sound: "-",                                                                                count: "2",      duration: "4:00" },
+      "She died under the bridge":        { lighting: "（バッキングのみ→２周でオールイン）\nきらきら夏の記憶の照り返し、多幸感",              sound: "（ドラムコーラスあり）",                                                            count: "guitar", duration: "4:30" },
+      "plasticsummertime":                { lighting: "（ドラム4カウントスタート）\n寂しく",                                                  sound: "-",                                                                                count: "-",      duration: "2:30" },
+      "Ice box":                          { lighting: "（ドラム4カウントスタート）\nアイススケートの照り返し",                                sound: "-",                                                                                count: "-",      duration: "3:30" },
+      "For Jules":                        { lighting: "（ドラム2カウントスタート）\n海のこと",                                                sound: "-",                                                                                count: "2",      duration: "3:30" },
+      "marble":                           { lighting: "（ドラム4カウントスタート）\n眩しく、逆光",                                            sound: "-",                                                                                count: "-",      duration: "3:30" },
+      "MIRROR'S EDGE":                    { lighting: "（ドラム2カウントスタート）\n屋上のアスファルトと照り返す太陽",                        sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "3:10" },
+      "IKAROS":                           { lighting: "（ドラムのみでスタート→ハイハット4カウントでオールイン）\n空と疾走感",                sound: "-",                                                                                count: "drums",  duration: "3:30" },
+      "Guernica":                         { lighting: "（ドラム4カウントスタート）\n防波堤のこと",                                            sound: "-",                                                                                count: "-",      duration: "2:15" },
+      "SugarCrash":                       { lighting: "（ドラム4カウントスタート）\nキラキラ眩しい二日酔い、白ベース",                        sound: "-",                                                                                count: "-",      duration: "3:40" },
+      "wallflower":                       { lighting: "（ドラム2カウントスタート）\n草原と風車と広い空",                                      sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "4:30" },
+      "Ghost Dream":                      { lighting: "（ボーカル二人のみスタート→ドラムの４連からオールイン）\n灰と虹と",                    sound: "-",                                                                                count: "-",      duration: "2:40" },
+      "Enrique":                          { lighting: "深く深く",                                                                             sound: "（ドラムコーラスあり）他の曲より超爆リバーブ\n歌が埋まるように・音量上げるイメージ", count: "-",      duration: "4:00" },
+      "Portraits":                        { lighting: "（４カウントスタート）\nフェリーの上から飛行機雲を眺めて",                              sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "2:00" },
+      "Raindrops/Sunny-side Up":          { lighting: "（４カウントスタート）\nお天気雨",                                                     sound: "-",                                                                                count: "-",      duration: "4:10" },
+      "BALLOON DOG":                      { lighting: "（スネア4発後、オールイン）\n晴れ渡った教会近くで\n2人愛を誓っていようね",             sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "4:10" },
+      "RABBIT FIRE!!":                    { lighting: "（ドラム2カウントスタート）\nスピード感のあるような。ハイパーポップ。明るく爽快感のある",  sound: "（ドラムコーラスあり）",                                                            count: "2",      duration: "2:10" },
+      "NIDHOGG":                          { lighting: "（ドラム4カウントスタート）\n全体的に涼しい昼間のような、サビはグランジな雰囲気で",    sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "2:50" },
+      "SUNNY DEAD YOUTH":                 { lighting: "（ドラムの合図ですぐオールイン）\n前半は眩しめに 後半にかけて夏が終わるような",        sound: "-",                                                                                count: "-",      duration: "3:55" },
+      "↑POINT OF VIEW↓":                 { lighting: "（ドラム4カウントスタート）\nキラキラとまぶしく、ひんやりと走り抜ける",                sound: "-",                                                                                count: "-",      duration: "3:15" },
+      "WATER PARK":                       { lighting: "（ドラムフレーズ2周でオールイン）\nオールインで一気に眩しく！ 眩しめでお願いします。",  sound: "サビのシンバルをハイ立ち良く",                                                      count: "drums",  duration: "3:15" },
+      "SLOWDIVE":                         { lighting: "（ドラムの合図ですぐオールイン）\nざらついた空気",                                      sound: "-",                                                                                count: "-",      duration: "3:20" },
+      "MY ANGEL":                         { lighting: "（ギターリフからスタート）\n軽やかに、夏の雨上がり",                                    sound: "-",                                                                                count: "guitar", duration: "3:30" },
+      "SUNDAY DIVER":                     { lighting: "（ドラム2カウントスタート）\n屋内プールに飛びこむような解放感と疾走感",                sound: "-",                                                                                count: "2",      duration: "4:05" },
+      "BANANA FISH":                      { lighting: "（ドラム4カウントスタート）\n風通しの良い、その隙間で生まれる陽炎",                    sound: "（ドラムコーラスあり）",                                                            count: "-",      duration: "5:35" },
+      "Salinger's Choice":                { lighting: "-",                                                                                    sound: "-",                                                                                count: "-",      duration: "3:47" },
+      "The Song That Plays When You Die": { lighting: "-",                                                                                    sound: "-",                                                                                count: "-",      duration: "2:12" },
+    };
+
+    const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
+
+    let items = [];
+    let dragSrc = null;
+
+    function updateDatalist() {
+      const dl = document.getElementById('song-suggestions');
+      const used = new Set(items.filter(i => i.type === 'song').map(i => i.name));
+      dl.innerHTML = '';
+      Object.keys(SONG_DB).sort().forEach(name => {
+        if (!used.has(name)) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          dl.appendChild(opt);
+        }
+      });
+    }
+    updateDatalist();
+
+    document.getElementById('song-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addSong();
+    });
+
+    // ── List management ──────────────────────────────────────────────────
+
+    function addSong() {
+      const input = document.getElementById('song-input');
+      const name = input.value.trim();
+      if (!name) return;
+      if (items.some(i => i.type === 'song' && i.name === name)) {
+        input.select();
+        input.style.borderColor = '#cc1111';
+        setTimeout(() => { input.style.borderColor = ''; }, 1200);
+        return;
+      }
+      items.push({ type: 'song', name });
+      input.value = '';
+      input.focus();
+      renderList();
+    }
+
+    function addMC() {
+      items.push({ type: 'mc', name: 'MC' });
+      renderList();
+    }
+
+    function removeItem(i) {
+      items.splice(i, 1);
+      renderList();
+    }
+
+    function renderList() {
+      const list = document.getElementById('song-list');
+      list.innerHTML = '';
+      let songCount = 0;
+      items.forEach((item, i) => {
+        const isMC = item.type === 'mc';
+        if (!isMC) songCount++;
+        const data = (!isMC && SONG_DB[item.name]) || {};
+        const li = document.createElement('li');
+        if (isMC) li.classList.add('mc-row');
+        li.draggable = true;
+        li.dataset.index = i;
+        const meta = (!isMC && data.duration) ? data.duration : '';
+        const inDB = !isMC && !!SONG_DB[item.name];
+        li.innerHTML = `
+          <span class="song-num">${isMC ? 'MC' : songCount + '.'}</span>
+          <span class="song-name">${escapeHtml(item.name)}${!inDB && !isMC ? ' <span style="color:#555;font-size:11px;">（DBになし）</span>' : ''}</span>
+          ${meta ? `<span class="song-meta">${meta}</span>` : ''}
+          <button class="remove-btn" onclick="removeItem(${i})">×</button>
+        `;
+        li.addEventListener('dragstart', onDragStart);
+        li.addEventListener('dragover',  onDragOver);
+        li.addEventListener('dragleave', onDragLeave);
+        li.addEventListener('drop',      onDrop);
+        li.addEventListener('dragend',   onDragEnd);
+        list.appendChild(li);
+      });
+      updateDatalist();
+    }
+
+    function onDragStart(e) { dragSrc = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+    function onDragOver(e)  { e.preventDefault(); this.classList.add('drag-over'); }
+    function onDragLeave()  { this.classList.remove('drag-over'); }
+    function onDrop(e) {
+      e.preventDefault();
+      if (dragSrc === this) return;
+      const from = parseInt(dragSrc.dataset.index);
+      const to   = parseInt(this.dataset.index);
+      const moved = items.splice(from, 1)[0];
+      items.splice(to, 0, moved);
+      renderList();
+    }
+    function onDragEnd() {
+      document.querySelectorAll('#song-list li').forEach(li => li.classList.remove('dragging', 'drag-over'));
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+
+    function parseDuration(dur) {
+      if (!dur || dur === '-') return 0;
+      const parts = dur.trim().split(':');
+      return parts.length === 2 ? (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0) : 0;
+    }
+
+    function formatDuration(sec) {
+      return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    }
+
+    function formatDateDisplay(isoDate) {
+      if (!isoDate) return '';
+      const d = new Date(isoDate + 'T00:00:00');
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const wd = WEEKDAY_JA[d.getDay()];
+      return `${y}/${m}/${day}（${wd}）`;
+    }
+
+    // ── SE（入場曲）UI ──
+    function onSEChange() {
+      const hasSE = document.querySelector('input[name="se-flag"]:checked').value === '有り';
+      document.getElementById('se-media-wrap').style.display = hasSE ? '' : 'none';
+      if (!hasSE) document.getElementById('se-media-other').style.display = 'none';
+      else onSEMediaChange();
+    }
+    function onSEMediaChange() {
+      const isOther = document.getElementById('se-media').value === 'その他';
+      document.getElementById('se-media-other').style.display = isOther ? '' : 'none';
+    }
+    function getSEText() {
+      const hasSE = document.querySelector('input[name="se-flag"]:checked').value === '有り';
+      if (!hasSE) return 'SE: 無し';
+      let media = document.getElementById('se-media').value;
+      if (media === 'その他') {
+        const other = document.getElementById('se-media-other').value.trim();
+        media = other || 'その他';
+      }
+      return `SE: 有り（${media}持参）`;
+    }
+    function getOrderText() {
+      const v = document.getElementById('live-order').value.trim();
+      return v ? `出演順: ${v}` : '';
+    }
+
+    function buildHeader(includeMeta) {
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      const dateStr  = dateVal  ? formatDateDisplay(dateVal) : '';
+      const venueStr = venueVal ? `@ ${venueVal}` : '';
+      const orderStr = includeMeta ? getOrderText() : '';
+      const seStr    = includeMeta ? getSEText()    : '';
+      const logoUrl = new URL('logo.avif', document.baseURI).href;
+      return `
+        <div class="sheet-meta">
+          ${dateStr  ? `<div class="sheet-meta-date">${escapeHtml(dateStr)}</div>`  : ''}
+          ${venueStr ? `<div class="sheet-meta-venue">${escapeHtml(venueStr)}</div>` : ''}
+          ${orderStr ? `<div class="sheet-meta-sub">${escapeHtml(orderStr)}</div>` : ''}
+          ${seStr    ? `<div class="sheet-meta-sub">${escapeHtml(seStr)}</div>`    : ''}
+        </div>
+        <img class="sheet-logo-img" src="${logoUrl}" alt="MoritaSaki in the pool"
+             onerror="this.outerHTML='&lt;div class=&quot;sheet-logo-bar&quot;&gt;MoritaSaki in the pool&lt;/div&gt;'" />
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Generate ─────────────────────────────────────────────────────────
+
+    function generateSheets() {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      renderCombined();
+      renderCount();
+      const out = document.getElementById('output-section');
+      out.style.display = 'block';
+      out.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderCombined() {
+      let songCount = 0, totalSec = 0, rows = '';
+      items.forEach(item => {
+        if (item.type === 'mc') {
+          rows += `<tr class="mc-row"><td></td><td>MC</td><td>-</td><td>-</td><td>00:00</td></tr>`;
+          return;
+        }
+        songCount++;
+        const d = SONG_DB[item.name] || {};
+        const dur = d.duration || '-';
+        totalSec += parseDuration(dur);
+        rows += `<tr>
+          <td>${songCount}.</td>
+          <td>${escapeHtml(item.name)}</td>
+          <td class="text-left">${escapeHtml(d.lighting || '-')}</td>
+          <td class="text-left">${escapeHtml(d.sound    || '-')}</td>
+          <td>${escapeHtml(dur)}</td>
+        </tr>`;
+      });
+      rows += `<tr class="note-row"><td colspan="5">※全曲ストロボは無しでお願いします</td></tr>`;
+
+      document.getElementById('total-combined').textContent = `合計時間（曲のみ）: ${formatDuration(totalSec)}`;
+      document.getElementById('sheet-combined').innerHTML = buildHeader(true) + `
+        <div class="sheet-wrap">
+          <table class="output-table">
+            <colgroup>
+              <col style="width:44px;" />
+              <col style="width:15%;" />
+              <col style="width:24%;" />
+              <col />
+              <col style="width:60px;" />
+            </colgroup>
+            <thead><tr>
+              <th>曲順</th><th>曲名</th><th>照明要望</th><th>音響要望</th><th>時間<br/>(m:s)</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderCount() {
+      let songCount = 0, rows = '';
+      items.forEach(item => {
+        if (item.type === 'mc') {
+          rows += `<tr class="mc-row">
+            <td class="col-num"></td>
+            <td class="col-song">MC</td>
+            <td class="col-count"></td>
+          </tr>`;
+          return;
+        }
+        songCount++;
+        const d = SONG_DB[item.name] || {};
+        const count = d.count && d.count !== '-' ? d.count : '';
+        rows += `<tr>
+          <td class="col-num">${songCount}.</td>
+          <td class="col-song">${escapeHtml(item.name)}</td>
+          <td class="col-count">${escapeHtml(count)}</td>
+        </tr>`;
+      });
+
+      document.getElementById('sheet-count').innerHTML = buildHeader(false) + `
+        <div class="sheet-wrap" style="margin-top:0;">
+          <table class="count-table">
+            <thead><tr>
+              <th style="width:64px;">number</th>
+              <th>songs</th>
+              <th style="width:72px;">count</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ── Tabs ─────────────────────────────────────────────────────────────
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ── PDF print ────────────────────────────────────────────────────────
+
+    function printTab(tab) {
+      const sheetEl = document.getElementById('sheet-' + tab);
+      const totalEl = document.getElementById('total-combined');
+      const totalHtml = (tab === 'combined' && totalEl) ? `<div style="font-size:12px;color:#555;text-align:right;margin-bottom:6px;">${totalEl.textContent}</div>` : '';
+
+      const win = window.open('', '_blank', 'width=900,height=700');
+      win.document.write(`<!DOCTYPE html><html lang="ja"><head>
+        <meta charset="UTF-8"/>
+        <title>MoritaSaki in the pool</title>
+        <style>
+          /* 余白0でブラウザのヘッダー/フッター（about:blank・日時等）を非表示に */
+          @page { size: A4; margin: 0; }
+          * { margin:0; padding:0; box-sizing:border-box; }
+          body { font-family: Arial, sans-serif; background:#fff; color:#000; padding:15mm; }
+          .sheet-meta { text-align:center; margin-bottom:2px; }
+          .sheet-meta-date  { font-size:18px; color:#111; padding:4px 0; font-weight:700; }
+          .sheet-meta-venue { font-size:18px; color:#111; padding:2px 0; font-weight:700; }
+          .sheet-meta-sub   { font-size:14px; color:#111; padding:2px 0; font-weight:600; }
+          .sheet-logo-bar {
+            display:block; text-align:center; background:#cc1111; color:#fff;
+            font-weight:900; font-style:italic; font-size:28px;
+            padding:22px 20px; margin:10px 0 0 0; letter-spacing:0.02em;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .sheet-logo-img {
+            display:block; width:62%; max-width:600px; height:auto;
+            margin:10px auto 28px;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .output-table { border-collapse:collapse; width:100%; font-size:12px; table-layout:fixed; }
+          .output-table th {
+            background:#f3f3f3; font-weight:600; text-align:center;
+            padding:8px 6px; border:1px solid #b7b7b7; white-space:nowrap;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .output-table td { padding:7px 8px; border:1px solid #d0d0d0; text-align:center; vertical-align:middle; line-height:1.5; }
+          .output-table td.text-left { text-align:left; white-space:pre-line; }
+          .output-table tr.mc-row td { background:#f9f9f9; color:#999; font-style:italic; }
+          .output-table tr.note-row td {
+            background:#fff8c5; color:#c00000;
+            font-size:13px; font-weight:700; text-align:center;
+            border:2px solid #c00000; padding:10px; letter-spacing:0.05em;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .count-table { border-collapse:collapse; width:100%; font-size:18px; border:3px solid #000; }
+          .count-table thead tr { border-bottom:3px solid #000; }
+          .count-table th { font-style:italic; font-weight:700; text-align:center; padding:8px; border:none; border-right:1px solid #000; font-size:12px; }
+          .count-table th:last-child { border-right:none; }
+          .count-table td { padding:18px 8px; border:none; border-bottom:1px dotted #000; border-right:1px solid #000; text-align:center; vertical-align:middle; }
+          .count-table td:last-child { border-right:none; }
+          .count-table tr:last-child td { border-bottom:none; }
+          .count-table td.col-num   { width:72px; font-weight:700; font-size:18px; }
+          .count-table td.col-song  { font-weight:700; font-size:20px; }
+          .count-table td.col-count { width:96px; font-weight:700; font-size:18px; }
+          .count-table tr.mc-row td { font-weight:700; font-size:18px; border-bottom:1px dotted #000; }
+        </style>
+      </head><body>
+        ${totalHtml}
+        ${sheetEl.innerHTML}
+      </body></html>`);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); }, 400);
+    }
+
+    // ── Copy text ────────────────────────────────────────────────────────
+
+    function copySheet(tab) {
+      const sheetEl = document.getElementById('sheet-' + tab);
+      const titles  = { combined: '照明・音響要望シート', count: 'セットリスト' };
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+
+      let text = `【MoritaSaki in the pool ${titles[tab]}】\n`;
+      if (dateVal)  text += formatDateDisplay(dateVal) + '\n';
+      if (venueVal) text += `@ ${venueVal}\n`;
+      if (tab === 'combined') {
+        const orderStr = getOrderText();
+        if (orderStr) text += orderStr + '\n';
+        text += getSEText() + '\n';
+      }
+      text += '\n';
+
+      const headers = sheetEl.querySelectorAll('thead th');
+      text += Array.from(headers).map(h => h.textContent.trim()).join('\t') + '\n';
+      sheetEl.querySelectorAll('tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        text += Array.from(cells).map(c => c.textContent.trim().replace(/\n/g,' ')).join('\t') + '\n';
+      });
+
+      const totalEl = document.getElementById('total-combined');
+      if (tab === 'combined' && totalEl) text += '\n' + totalEl.textContent.trim();
+
+      navigator.clipboard.writeText(text).then(() => {
+        const msg = document.getElementById('msg-' + tab);
+        if (!msg) return;
+        msg.textContent = 'コピーしました';
+        msg.style.opacity = '1';
+        setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+      });
+    }
+
+    // ── CSV download（Excel・スプレッドシートで編集できる形式）──────────
+
+    function csvEscape(v) {
+      const s = String(v == null ? '' : v);
+      return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+
+    function buildCsvRows(tab) {
+      const titles  = { combined: '照明・音響要望シート', count: 'セットリスト' };
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      const rows = [];
+      rows.push([`MoritaSaki in the pool ${titles[tab]}`]);
+      if (dateVal)  rows.push(['日付', formatDateDisplay(dateVal)]);
+      if (venueVal) rows.push(['会場', venueVal]);
+      if (tab === 'combined') {
+        const orderVal = document.getElementById('live-order').value.trim();
+        if (orderVal) rows.push(['出演順', orderVal]);
+        rows.push(['SE', getSEText().replace(/^SE: /, '')]);
+      }
+      rows.push([]);
+
+      let songCount = 0, totalSec = 0;
+      if (tab === 'combined') {
+        rows.push(['曲順', '曲名', '照明要望', '音響要望', '所要時間(m:s)']);
+        items.forEach(item => {
+          if (item.type === 'mc') { rows.push(['', 'MC', '-', '-', '00:00']); return; }
+          songCount++;
+          const d = SONG_DB[item.name] || {};
+          totalSec += parseDuration(d.duration || '-');
+          rows.push([songCount, item.name, d.lighting || '-', d.sound || '-', d.duration || '-']);
+        });
+        rows.push([]);
+        rows.push(['※全曲ストロボは無しでお願いします']);
+        rows.push(['合計時間（曲のみ）', formatDuration(totalSec)]);
+      } else {
+        rows.push(['number', 'songs', 'count']);
+        items.forEach(item => {
+          if (item.type === 'mc') { rows.push(['', 'MC', '']); return; }
+          songCount++;
+          const d = SONG_DB[item.name] || {};
+          rows.push([songCount, item.name, (d.count && d.count !== '-') ? d.count : '']);
+        });
+      }
+      return rows;
+    }
+
+    function downloadCsvFile(rows, filename) {
+      const csv = '\uFEFF' + rows.map(r => r.map(csvEscape).join(',')).join('\r\n'); // BOM付きでExcelの文字化けを防ぐ
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }
+
+    function downloadCsv(tab) {
+      const titles = { combined: '照明音響要望', count: 'セットリスト' };
+      const dateVal = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      const label = [dateVal, venueVal].filter(Boolean).join('_');
+      downloadCsvFile(buildCsvRows(tab), `${label ? label + '_' : ''}${titles[tab]}.csv`);
+    }
+
+    // ── MP3 Download ─────────────────────────────────────────────────────
+
+    const MP3_PW_HASH = '2e3e77537bf9c7aa6db5f69625c40f5a125cb119032cb5db1683f7e0f946a3e3';
+
+    const SONG_FILE = {
+      "September":                        "September.m4a",
+      "She set under the bridge":         "She_set_under_the_bridge.m4a",
+      "I irk Saki.":                      "I_irk_Saki.m4a",
+      "Ivy in Navy Skirt":                "Ivy_in_Navy_Skirt.m4a",
+      "She died under the bridge":        "She_died_under_the_bridge.mp3",
+      "plasticsummertime":                "plasticsummertime.m4a",
+      "Ice box":                          "Ice_box.m4a",
+      "For Jules":                        "For_Jules.m4a",
+      "marble":                           "marble.m4a",
+      "MIRROR'S EDGE":                    "MIRRORS_EDGE.m4a",
+      "IKAROS":                           "IKAROS.m4a",
+      "Guernica":                         "Guernica.m4a",
+      "SugarCrash":                       "SugarCrash.m4a",
+      "wallflower":                       "wallflower.m4a",
+      "Ghost Dream":                      "Ghost_Dream.m4a",
+      "Enrique":                          "Enrique.m4a",
+      "Portraits":                        "Portraits.m4a",
+      "Raindrops/Sunny-side Up":          "Raindrops_Sunny-side_Up.m4a",
+      "BALLOON DOG":                      "BALLOON_DOG.m4a",
+      "RABBIT FIRE!!":                    "RABBIT_FIRE.m4a",
+      "NIDHOGG":                          "NIDHOGG.m4a",
+      "SUNNY DEAD YOUTH":                 "SUNNY_DEAD_YOUTH.m4a",
+      "↑POINT OF VIEW↓":                 "POINT_OF_VIEW.m4a",
+      "WATER PARK":                       "WATER_PARK.m4a",
+      "SLOWDIVE":                         "SLOWDIVE.m4a",
+      "MY ANGEL":                         "MY_ANGEL.m4a",
+      "SUNDAY DIVER":                     "SUNDAY_DIVER.m4a",
+      "BANANA FISH":                      "BANANA_FISH.m4a",
+      "Salinger's Choice":                "Salingers_Choice.m4a",
+      "The Song That Plays When You Die": "The_Song_That_Plays_When_You_Die.m4a",
+    };
+
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function checkMp3Password() {
+      const pw = document.getElementById('mp3-pw').value;
+      const hash = await sha256(pw);
+      if (hash === MP3_PW_HASH) {
+        document.getElementById('mp3-auth').style.display = 'none';
+        document.getElementById('mp3-download').style.display = 'block';
+        renderMp3List();
+        loadSetzu();
+      } else {
+        document.getElementById('mp3-pw-error').style.display = 'block';
+      }
+    }
+
+    function renderMp3List() {
+      const ul = document.getElementById('mp3-file-list');
+      ul.innerHTML = '';
+      const songs = items.filter(i => i.type === 'song');
+      songs.forEach((item, idx) => {
+        const num = String(idx + 1).padStart(2, '0');
+        const file = SONG_FILE[item.name];
+        const li = document.createElement('li');
+        li.style.padding = '4px 0';
+        li.style.borderBottom = '1px solid #111';
+        if (file) {
+          li.textContent = `✓ ${num} ${item.name}  →  sounds/${file}`;
+        } else {
+          li.textContent = `✗ ${num} ${item.name}  （ファイル未登録）`;
+          li.style.color = '#333';
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    async function downloadMp3Zip() {
+      const allSongs = items.filter(i => i.type === 'song');
+      const songs = allSongs.filter(i => SONG_FILE[i.name]);
+      if (songs.length === 0) { alert('ダウンロード可能な曲がありません'); return; }
+
+      const status = document.getElementById('mp3-status');
+      status.textContent = '準備中...';
+
+      const zip = new JSZip();
+      const folder = zip.folder('setlist_mp3');
+      let loaded = 0;
+
+      for (let idx = 0; idx < songs.length; idx++) {
+        const item = songs[idx];
+        const filename = SONG_FILE[item.name];
+        const num = String(allSongs.indexOf(item) + 1).padStart(2, '0'); // セトリ上の曲順
+        try {
+          const res = await fetch(`sounds/${filename}`);
+          if (!res.ok) throw new Error(`not found: ${filename}`);
+          const blob = await res.blob();
+          folder.file(`${num}_${filename}`, blob);
+          loaded++;
+          status.textContent = `読み込み中... ${loaded}/${songs.length}`;
+        } catch {
+          status.textContent = `⚠ ${filename} が見つかりません`;
+        }
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      const dateVal = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      const label = [dateVal, venueVal].filter(Boolean).join('_') || 'setlist';
+      a.download = `${label}_mp3.zip`;
+      a.click();
+      status.textContent = 'ダウンロード完了';
+    }
+
+    // ── 会場セット図（スタッフ用） ───────────────────────────────────────
+    // ★ 会場別セット図シート（タブ）を「ファイル → 共有 → ウェブに公開 → CSV」で
+    //    公開したURLを1会場=1URLで並べる。
+    //    新しい会場タブを追加したら、公開設定でそのタブを選び直して
+    //    出てきたURL（gid=... 付き）をこの配列に追加する。
+    //    シート内の「会場：○○」の行から会場名を自動取得する。
+    const SETZU_PUB_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTMfimo3jxFyoJw4wcKZN1uz9LjpD0BE3pquxsfxECmfrEb-IX9Eqls7CAXaOAt2lL_JG-EzCkQpPO_/pub';
+    // 会場タブの gid 一覧（新しい会場タブを追加したら gid をここに足す）
+    const SETZU_GIDS = [
+      '774749046',  // UrBANGUILD
+      '159473594',  // ESAKA MUSE
+      '901873294',  // KANDA SQUARE HALL
+      '1701180112', // LIVE HOUSE GATTACA
+      '1708768781', // GARRET udagawa
+      '1830516021', // KOENJI HIGH
+      '988813876',  // CONPASS
+      '1465709287', // 下北沢SPREAD
+      '0',          // 下北沢近道
+      '2045764218', // 下北沢BASEMENT BAR
+      '1892195918', // 下北沢Flowers Loft
+      '603514165',  // 下北沢LIVE HAUS
+      '1970106006', // THREE
+      '2078294318', // 鶴舞DAYTRIP
+      '316196368',  // TAKE OFF 7
+      '1305637123', // 奈良NEVER LAND
+      '1929819638', // Pangea
+      '93956951',   // 寺田町Fireloop
+      '425391251',  // monarecords
+      '1128182965', // Yogibo HOLY MOUNTAIN
+    ];
+    const SETZU_CSV_URLS = SETZU_GIDS.map(gid => `${SETZU_PUB_BASE}?gid=${gid}&single=true&output=csv`);
+
+    let setzuData = []; // [{ venue, amps:[{use,num,model,note}], gear:[{part,text}], monitor:[{part,text}] }]
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], cell = '', inQ = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (c === '"') {
+          if (inQ && text[i + 1] === '"') { cell += '"'; i++; }
+          else inQ = !inQ;
+        } else if (c === ',' && !inQ) {
+          row.push(cell); cell = '';
+        } else if ((c === '\n' || c === '\r') && !inQ) {
+          if (c === '\r' && text[i + 1] === '\n') i++;
+          row.push(cell); rows.push(row); row = []; cell = '';
+        } else {
+          cell += c;
+        }
+      }
+      if (row.length || cell) { row.push(cell); rows.push(row); }
+      return rows;
+    }
+
+    // Google Drive の共有URLからファイルIDを抽出
+    function driveFileId(u) {
+      if (!u) return null;
+      const m = String(u).match(/[?&]id=([\w-]+)|\/d\/([\w-]+)/);
+      return m ? (m[1] || m[2]) : null;
+    }
+
+    // 会場シート（セルで描かれたセット図）のCSVから構造化データを抽出する。
+    // 認識するブロック: 「会場：○○」/ 「○○ Amp」行（❶❷…の番号付き）/
+    // 「持ち込み機材」「初期返し要望」（パート名＋内容の行が続く）
+    // ※会場タブによって表の開始列がずれるため、ラベルの位置を行ごとに探して
+    //   その右隣を key 列として扱う（列位置に依存しない）。
+    function parseVenueSheet(rows) {
+      const d = { venue: '', amps: [], gear: [], monitor: [] };
+      const NUM_RE = /^[❶-❿①-⑳]/; // ❶-❿ ①-⑳
+      let section = '';
+      let ampUse = '';
+      let keyCol = -1; // セクションの key（番号/パート名）が入る列
+
+      for (const raw of rows) {
+        const c = raw.map(x => (x || '').trim());
+        if (!d.venue) {
+          const hit = c.find(x => /会場[：:]/.test(x));
+          if (hit) { d.venue = hit.replace(/.*会場[：:]\s*/, '').trim(); continue; }
+        }
+
+        // セクション見出しを行内から探す
+        const ampIdx = c.findIndex(x => /Amp$/i.test(x));
+        const gearIdx = c.indexOf('持ち込み機材');
+        const monIdx = c.indexOf('初期返し要望');
+
+        if (ampIdx >= 0) {
+          section = 'amp';
+          ampUse = c[ampIdx];
+          keyCol = ampIdx + 1;
+          if (c[keyCol]) d.amps.push({ use: ampUse, num: c[keyCol], model: c[keyCol + 1] || '', note: c[keyCol + 2] || '' });
+          continue;
+        }
+        if (gearIdx >= 0) {
+          section = 'gear';
+          keyCol = gearIdx + 1;
+          if (c[keyCol]) d.gear.push({ part: c[keyCol], text: c[keyCol + 1] || '' });
+          continue;
+        }
+        if (monIdx >= 0) {
+          section = 'monitor';
+          keyCol = monIdx + 1;
+          if (c[keyCol]) d.monitor.push({ part: c[keyCol], text: c[keyCol + 1] || '' });
+          continue;
+        }
+
+        if (!section || keyCol < 0) continue;
+        if (c[keyCol - 1]) { section = ''; continue; } // 別の未知ラベル → セクション終了
+        const key = c[keyCol] || '';
+        if (!key) continue; // 空行はスキップ（セクション継続）
+
+        if (section === 'amp' && NUM_RE.test(key)) d.amps.push({ use: ampUse, num: key, model: c[keyCol + 1] || '', note: c[keyCol + 2] || '' });
+        else if (section === 'gear') d.gear.push({ part: key, text: c[keyCol + 1] || '' });
+        else if (section === 'monitor') d.monitor.push({ part: key, text: c[keyCol + 1] || '' });
+      }
+      return d;
+    }
+
+    async function loadSetzu() {
+      const status = document.getElementById('setzu-status');
+      const select = document.getElementById('setzu-venue');
+      if (!SETZU_CSV_URLS.length) {
+        status.textContent = 'セット図データのURLが未設定です（会場シートを「ウェブに公開 → CSV」して SETZU_CSV_URLS に追加してください）';
+        select.innerHTML = '<option value="">— データ未設定 —</option>';
+        return;
+      }
+      status.textContent = 'セット図データを読み込み中...';
+      try {
+        const results = await Promise.allSettled(SETZU_CSV_URLS.map(async url => {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('fetch failed');
+          return parseVenueSheet(parseCSV(await res.text()));
+        }));
+        setzuData = results
+          .filter(r => r.status === 'fulfilled' && r.value.venue)
+          .map(r => r.value);
+        if (!setzuData.length) throw new Error('no venues');
+
+        select.innerHTML = '<option value="">— 会場を選択 —</option>' +
+          setzuData.map((d, i) => `<option value="${i}">${escapeHtml(d.venue)}</option>`).join('');
+        status.textContent = '';
+        autoSelectSetzuVenue();
+      } catch {
+        status.textContent = 'セット図データの取得に失敗しました（公開設定・URLを確認してください）';
+        select.innerHTML = '<option value="">— 取得失敗 —</option>';
+      }
+    }
+
+    // 上部の会場入力と部分一致したら自動選択
+    function autoSelectSetzuVenue() {
+      const input = document.getElementById('live-venue').value.trim().toLowerCase();
+      if (!input || !setzuData.length) return;
+      const idx = setzuData.findIndex(d => {
+        const v = d.venue.toLowerCase();
+        return v.includes(input) || input.includes(v);
+      });
+      if (idx >= 0) {
+        document.getElementById('setzu-venue').value = String(idx);
+        renderSetzu();
+      }
+    }
+    document.getElementById('live-venue').addEventListener('change', autoSelectSetzuVenue);
+
+    // アンプの用途 → 図・表で共通の色
+    function ampColor(use) {
+      if (/VoGt/i.test(use)) return '#f0932b'; // オレンジ
+      if (/VoBa/i.test(use)) return '#e02020'; // 赤
+      if (/Gt/i.test(use))   return '#f5e642'; // 黄
+      return '#999';
+    }
+
+    // ❶→1 / ①→1 の変換（図中は普通の数字で表示）
+    function plainNum(s) {
+      const code = (s || '').codePointAt(0) || 0;
+      if (code >= 0x2776 && code <= 0x277F) return String(code - 0x2775); // ❶-❿
+      if (code >= 0x2460 && code <= 0x2473) return String(code - 0x245F); // ①-⑳
+      return s;
+    }
+
+    // セット図（ステージ配置）をアンプデータから自動描画
+    function setzuDiagramSvg(d) {
+      if (!d.amps.length) return '';
+      const W = 800, H = 430;
+      let s = '';
+
+      // ステージ枠
+      s += `<rect x="20" y="16" width="760" height="360" rx="14" fill="#fff" stroke="#333" stroke-width="2"/>`;
+
+      // マイクスタンド記号（円＋スタンド）
+      const mic = (x, y) => `
+        <line x1="${x}" y1="${y}" x2="${x}" y2="${y + 22}" stroke="#333" stroke-width="2"/>
+        <circle cx="${x}" cy="${y - 2}" r="7" fill="none" stroke="#333" stroke-width="2"/>
+        <line x1="${x - 7}" y1="${y - 2}" x2="${x + 7}" y2="${y - 2}" stroke="#333" stroke-width="1.5"/>`;
+
+      // モニター記号（封筒型ウェッジ）
+      const wedge = (x, y) => `
+        <rect x="${x - 18}" y="${y}" width="36" height="24" fill="#fff" stroke="#333" stroke-width="2"/>
+        <path d="M ${x - 18} ${y} L ${x} ${y + 13} L ${x + 18} ${y}" fill="none" stroke="#333" stroke-width="2"/>`;
+
+      // Dr.（中央奥・ツータム構成）＋マイク
+      s += `<rect x="362" y="38" width="76" height="42" rx="8" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+            <text x="400" y="64" text-anchor="middle" font-size="15" fill="#888" font-family="Arial">Dr.</text>`;
+      s += `<rect x="357" y="86" width="86" height="40" rx="6" fill="#111"/>
+            <text x="400" y="102" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff" font-family="Arial">ツータム</text>
+            <text x="400" y="118" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff" font-family="Arial">構成</text>`;
+      s += mic(462, 52);
+      s += wedge(496, 40);
+
+      // アンプ（VoBa → VoGt → Gt の順に左から均等配置）
+      const order = u => (/VoBa/i.test(u) ? 0 : /VoGt/i.test(u) ? 1 : 2);
+      const amps = [...d.amps].sort((a, b) => order(a.use) - order(b.use) || plainNum(a.num) - plainNum(b.num));
+      const n = amps.length;
+      amps.forEach((a, i) => {
+        const cx = 110 + (580 / Math.max(n - 1, 1)) * i;
+        const col = ampColor(a.use);
+        s += `<rect x="${cx - 45}" y="118" width="90" height="46" rx="10" fill="#111" stroke="${col}" stroke-width="7"/>
+              <text x="${cx}" y="148" text-anchor="middle" font-size="19" font-weight="bold" fill="#fff" font-family="Arial">${escapeHtml(plainNum(a.num))}</text>`;
+      });
+
+      // メンバー（標準立ち位置: Vo.Ba 左 / Vo.Gt 中央 / Gt 上手）＋ボーカルマイク
+      const members = [['Vo.Ba.', 150], ['Vo.Gt.', 400], ['Gt.', 650]];
+      members.forEach(([label, cx]) => {
+        s += `<rect x="${cx - 38}" y="222" width="76" height="40" rx="8" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+              <text x="${cx}" y="247" text-anchor="middle" font-size="14" fill="#888" font-family="Arial">${label}</text>`;
+      });
+      s += mic(150, 288) + mic(400, 288);
+
+      // 転がしモニター（前列4つ）
+      [150, 320, 480, 650].forEach(x => { s += wedge(x, 330); });
+
+      s += `<text x="400" y="408" text-anchor="middle" font-size="15" fill="#333" font-family="Arial">フロア</text>`;
+
+      return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
+                   style="width:100%; max-width:560px; display:block; margin:0 auto 16px; background:#fff;">${s}</svg>`;
+    }
+
+    // セット情報を表として組み立てる（画面用/印刷用共通。スタイルはCSSクラスで分岐）
+    function setzuTablesHtml(d) {
+      const section = (title, headHtml, bodyHtml) => bodyHtml ? `
+        <div class="setzu-section">
+          <div class="setzu-section-title">${title}</div>
+          <table class="setzu-table">
+            <thead><tr>${headHtml}</tr></thead>
+            <tbody>${bodyHtml}</tbody>
+          </table>
+        </div>` : '';
+
+      const amps = d.amps.map(a => `<tr>
+        <td class="setzu-num">${escapeHtml(a.num)}</td>
+        <td style="background:${ampColor(a.use)}; font-weight:700; print-color-adjust:exact; -webkit-print-color-adjust:exact;">${escapeHtml(a.use)}</td>
+        <td>${escapeHtml(a.model)}</td>
+        <td>${escapeHtml(a.note)}</td>
+      </tr>`).join('');
+
+      const gear = d.gear.map(g => `<tr>
+        <td class="setzu-part">${escapeHtml(g.part)}</td>
+        <td class="text-left-cell">${escapeHtml(g.text)}</td>
+      </tr>`).join('');
+
+      const monitor = d.monitor.map(m => `<tr>
+        <td class="setzu-part">${escapeHtml(m.part)}</td>
+        <td class="text-left-cell">${escapeHtml(m.text)}</td>
+      </tr>`).join('');
+
+      return section('アンプ', '<th style="width:48px;">番号</th><th style="width:110px;">用途</th><th>機種</th><th style="width:110px;">レンタル/持込</th>', amps)
+           + section('持ち込み機材', '<th style="width:110px;">パート</th><th>機材</th>', gear)
+           + section('初期返し要望', '<th style="width:110px;">パート</th><th>要望</th>', monitor);
+    }
+
+    const SETZU_TABLE_CSS = `
+      .setzu-section { margin-bottom: 20px; }
+      .setzu-section-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+      .setzu-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+      .setzu-table th {
+        background: #f3f3f3; color: #000; font-weight: 600; text-align: center;
+        padding: 7px 8px; border: 1px solid #b7b7b7; white-space: nowrap;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .setzu-table td {
+        padding: 7px 8px; border: 1px solid #d0d0d0;
+        text-align: center; vertical-align: middle;
+        background: #fff; color: #000; line-height: 1.6;
+      }
+      .setzu-table td.text-left-cell { text-align: left; white-space: pre-line; }
+      .setzu-table td.setzu-num { font-weight: 700; }
+      .setzu-table td.setzu-part { font-weight: 600; white-space: nowrap; }
+    `;
+
+    function currentSetzu() {
+      const v = document.getElementById('setzu-venue').value;
+      return v === '' ? null : setzuData[parseInt(v)];
+    }
+
+    function renderSetzu() {
+      const view = document.getElementById('setzu-view');
+      const d = currentSetzu();
+      if (!d) { view.innerHTML = ''; return; }
+      view.innerHTML = `
+        <p style="color:#fff; font-size:14px; font-weight:700; margin-bottom:10px;">${escapeHtml(d.venue)} セット情報</p>
+        <div style="background:#fff; padding:16px;">
+          <style>${SETZU_TABLE_CSS}</style>
+          <div style="color:#000;">
+            ${setzuDiagramSvg(d)}
+            ${setzuTablesHtml(d)}
+          </div>
+        </div>
+      `;
+    }
+
+    // ── スタッフ用出力（1p: セット図 / 2p: 音響要望） ─────────────────────
+
+    function printStaffSheet() {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      const d = currentSetzu();
+      if (!d) {
+        alert('会場を選択してください（セット図データが必要です）。');
+        return;
+      }
+      renderCombined(); // 最新の入力内容でシートを再生成
+      const combinedHtml = document.getElementById('sheet-combined').innerHTML;
+      const headerHtml = buildHeader(true);
+
+      const win = window.open('', '_blank', 'width=900,height=700');
+      win.document.write(`<!DOCTYPE html><html lang="ja"><head>
+        <meta charset="UTF-8"/>
+        <title>MoritaSaki in the pool</title>
+        <style>
+          @page { size: A4; margin: 0; }
+          * { margin:0; padding:0; box-sizing:border-box; }
+          body { font-family: Arial, sans-serif; background:#fff; color:#000; padding:10mm 15mm; }
+          .page-break { page-break-after: always; }
+          .setzu-title { font-size:15px; font-weight:700; text-align:center; margin:4px 0 8px; }
+          ${SETZU_TABLE_CSS}
+          /* 1ページ目をA4に収めるためのコンパクト調整 */
+          .page-break .sheet-logo-img { width:38%; max-width:360px; margin:6px auto 10px; }
+          .page-break svg { max-width:400px !important; margin:0 auto 8px !important; }
+          .setzu-section { margin-bottom: 10px; }
+          .setzu-section-title { font-size: 12px; margin-bottom: 4px; }
+          .setzu-table { font-size: 11px; }
+          .setzu-table th { padding: 4px 6px; }
+          .setzu-table td { padding: 4px 6px; line-height: 1.45; }
+          .sheet-meta { text-align:center; margin-bottom:2px; }
+          .sheet-meta-date  { font-size:15px; color:#111; padding:2px 0; font-weight:700; }
+          .sheet-meta-venue { font-size:15px; color:#111; padding:1px 0; font-weight:700; }
+          .sheet-meta-sub   { font-size:12px; color:#111; padding:1px 0; font-weight:600; }
+          .sheet-logo-bar {
+            display:block; text-align:center; background:#cc1111; color:#fff;
+            font-weight:900; font-style:italic; font-size:28px;
+            padding:22px 20px; margin:10px 0 0 0; letter-spacing:0.02em;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .sheet-logo-img {
+            display:block; width:62%; max-width:600px; height:auto;
+            margin:10px auto 28px;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .output-table { border-collapse:collapse; width:100%; font-size:12px; table-layout:fixed; }
+          .output-table th {
+            background:#f3f3f3; font-weight:600; text-align:center;
+            padding:8px 6px; border:1px solid #b7b7b7; white-space:nowrap;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+          .output-table td { padding:7px 8px; border:1px solid #d0d0d0; text-align:center; vertical-align:middle; line-height:1.5; }
+          .output-table td.text-left { text-align:left; white-space:pre-line; }
+          .output-table tr.mc-row td { background:#f9f9f9; color:#999; font-style:italic; }
+          .output-table tr.note-row td {
+            background:#fff8c5; color:#c00000;
+            font-size:13px; font-weight:700; text-align:center;
+            border:2px solid #c00000; padding:10px; letter-spacing:0.05em;
+            print-color-adjust:exact; -webkit-print-color-adjust:exact;
+          }
+        </style>
+      </head><body>
+        <!-- 1ページ目: セット情報 -->
+        <div class="page-break">
+          ${headerHtml}
+          <div class="setzu-title">${escapeHtml(d.venue)} セット情報</div>
+          ${setzuDiagramSvg(d)}
+          ${setzuTablesHtml(d)}
+        </div>
+        <!-- 2ページ目: 照明・音響要望 -->
+        ${combinedHtml}
+      </body></html>`);
+      win.document.close();
+      win.focus();
+      // 画像（Drive）の読み込みを待ってから印刷
+      const imgs = Array.from(win.document.images);
+      const waitImgs = Promise.all(imgs.map(img => img.complete ? Promise.resolve() :
+        new Promise(r => { img.onload = img.onerror = r; })));
+      const timeout = new Promise(r => setTimeout(r, 4000));
+      Promise.race([waitImgs, timeout]).then(() => setTimeout(() => win.print(), 300));
+    }
+
+    function downloadStaffCsv() {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      const d = currentSetzu();
+      const rows = [];
+      rows.push(['MoritaSaki in the pool スタッフ用シート']);
+      if (d) {
+        rows.push([]);
+        rows.push(['■ セット情報']);
+        rows.push(['会場', d.venue]);
+        if (d.amps.length) {
+          rows.push(['アンプ', '番号', '用途', '機種', 'レンタル/持込']);
+          d.amps.forEach(a => rows.push(['', a.num, a.use, a.model, a.note]));
+        }
+        if (d.gear.length) {
+          rows.push(['持ち込み機材', 'パート', '機材']);
+          d.gear.forEach(g => rows.push(['', g.part, g.text]));
+        }
+        if (d.monitor.length) {
+          rows.push(['初期返し要望', 'パート', '要望']);
+          d.monitor.forEach(m => rows.push(['', m.part, m.text]));
+        }
+      }
+      rows.push([]);
+      rows.push(['■ 照明・音響要望']);
+      rows.push(...buildCsvRows('combined'));
+      const dateVal = document.getElementById('live-date').value;
+      const label = [dateVal, d ? d.venue : document.getElementById('live-venue').value.trim()].filter(Boolean).join('_');
+      downloadCsvFile(rows, `${label ? label + '_' : ''}スタッフ用シート.csv`);
+    }
+
+    // ── 編集用スプレッドシート（.xlsx）出力 ───────────────────────────────
+    // Googleドライブにアップすればスプレッドシートとして開いて編集可能。Excelでも開ける。
+    // セット図は原本と同じ「色付きセル」で再現するので、シート上でそのまま編集できる。
+
+    const XL = {
+      border: { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } },
+      fill: argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } }),
+      center: { vertical: 'middle', horizontal: 'center', wrapText: true },
+      left:   { vertical: 'middle', horizontal: 'left',   wrapText: true },
+    };
+
+    function ampArgb(use) { // ampColor と同じ配色（ARGB表記）
+      if (/VoGt/i.test(use)) return 'FFF0932B';
+      if (/VoBa/i.test(use)) return 'FFE02020';
+      if (/Gt/i.test(use))   return 'FFF5E642';
+      return 'FF999999';
+    }
+
+    // 日付/会場/出演順/SE ＋ 赤ロゴ帯 をシート先頭に書き、次の行番号を返す
+    function xlsxHeader(ws, includeMeta, width) {
+      const metas = [];
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      if (dateVal)  metas.push(formatDateDisplay(dateVal));
+      if (venueVal) metas.push('@ ' + venueVal);
+      if (includeMeta) {
+        const o = getOrderText(); if (o) metas.push(o);
+        const se = getSEText();   if (se) metas.push(se);
+      }
+      let r = 1;
+      metas.forEach(t => {
+        ws.mergeCells(r, 1, r, width);
+        const c = ws.getCell(r, 1);
+        c.value = t;
+        c.font = { bold: true, size: 13 };
+        c.alignment = XL.center;
+        r++;
+      });
+      ws.mergeCells(r, 1, r, width);
+      const logo = ws.getCell(r, 1);
+      logo.value = 'MoritaSaki in the pool';
+      logo.font = { bold: true, italic: true, size: 22, color: { argb: 'FFFFFFFF' } };
+      logo.fill = XL.fill('FFCC1111');
+      logo.alignment = XL.center;
+      ws.getRow(r).height = 42;
+      return r + 2;
+    }
+
+    // 見出し行＋データ行の表を書き、次の行番号を返す
+    function xlsxTable(ws, r, headers, rows) {
+      headers.forEach((h, i) => {
+        const c = ws.getCell(r, i + 1);
+        c.value = h;
+        c.font = { bold: true, size: 10 };
+        c.fill = XL.fill('FFF3F3F3');
+        c.border = XL.border;
+        c.alignment = XL.center;
+      });
+      r++;
+      rows.forEach(row => {
+        row.forEach((cell, i) => {
+          const c = ws.getCell(r, i + 1);
+          c.value = cell.v;
+          c.border = XL.border;
+          c.alignment = cell.align === 'left' ? XL.left : XL.center;
+          c.font = { size: cell.size || 10, bold: !!cell.bold };
+          if (cell.fill) c.fill = XL.fill(cell.fill);
+        });
+        r++;
+      });
+      return r + 1;
+    }
+
+    function xlsxSectionTitle(ws, r, width, text) {
+      ws.mergeCells(r, 1, r, width);
+      const c = ws.getCell(r, 1);
+      c.value = text;
+      c.font = { bold: true, size: 12 };
+      c.alignment = XL.left;
+      return r + 1;
+    }
+
+    function combinedRowsData() {
+      let n = 0, totalSec = 0;
+      const rows = [];
+      items.forEach(item => {
+        if (item.type === 'mc') {
+          rows.push([{ v: '' }, { v: 'MC', bold: true }, { v: '-' }, { v: '-' }, { v: '00:00' }]);
+          return;
+        }
+        n++;
+        const d = SONG_DB[item.name] || {};
+        totalSec += parseDuration(d.duration || '-');
+        rows.push([
+          { v: n + '.' },
+          { v: item.name, bold: true },
+          { v: d.lighting || '-', align: 'left' },
+          { v: d.sound || '-', align: 'left' },
+          { v: d.duration || '-' },
+        ]);
+      });
+      return { rows, totalSec };
+    }
+
+    // 照明・音響要望の表をワークシートへ書き込む
+    function writeCombinedSheet(ws, includeMeta) {
+      ws.columns = [{ width: 6 }, { width: 24 }, { width: 40 }, { width: 40 }, { width: 9 }];
+      let r = xlsxHeader(ws, includeMeta, 5);
+      const { rows, totalSec } = combinedRowsData();
+      r = xlsxTable(ws, r, ['曲順', '曲名', '照明要望', '音響要望', '時間(m:s)'], rows) - 1;
+      ws.mergeCells(r, 1, r, 5);
+      const note = ws.getCell(r, 1);
+      note.value = '※全曲ストロボは無しでお願いします';
+      note.font = { bold: true, size: 11, color: { argb: 'FFC00000' } };
+      note.fill = XL.fill('FFFFF8C5');
+      note.alignment = XL.center;
+      note.border = XL.border;
+      r += 1;
+      const total = ws.getCell(r, 5);
+      total.value = '合計 ' + formatDuration(totalSec);
+      total.font = { size: 10 };
+      total.alignment = XL.center;
+      return r + 1;
+    }
+
+    function saveWorkbook(wb, filename) {
+      wb.xlsx.writeBuffer().then(buf => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+        a.download = filename;
+        a.click();
+      });
+    }
+
+    function xlsxFileLabel() {
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      return [dateVal, venueVal].filter(Boolean).join('_');
+    }
+
+    async function downloadXlsxSheet(tab) {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      const wb = new ExcelJS.Workbook();
+      if (tab === 'combined') {
+        writeCombinedSheet(wb.addWorksheet('照明・音響要望'), true);
+      } else {
+        const ws = wb.addWorksheet('セットリスト');
+        ws.columns = [{ width: 8 }, { width: 44 }, { width: 10 }];
+        let r = xlsxHeader(ws, false, 3);
+        let n = 0;
+        const rows = items.map(item => {
+          if (item.type === 'mc') return [{ v: '' }, { v: 'MC', bold: true, size: 14 }, { v: '' }];
+          n++;
+          const d = SONG_DB[item.name] || {};
+          return [
+            { v: n + '.', bold: true, size: 12 },
+            { v: item.name, bold: true, size: 14 },
+            { v: d.count && d.count !== '-' ? d.count : '', bold: true, size: 12 },
+          ];
+        });
+        const start = r + 1;
+        r = xlsxTable(ws, r, ['number', 'songs', 'count'], rows);
+        for (let i = start; i < r - 1; i++) ws.getRow(i).height = 28;
+      }
+      const titles = { combined: '照明・音響要望シート', count: 'セットリスト' };
+      const label = xlsxFileLabel();
+      saveWorkbook(wb, `${label ? label + '_' : ''}${titles[tab]}.xlsx`);
+    }
+
+    async function downloadStaffXlsx() {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      const d = currentSetzu();
+      if (!d) {
+        alert('会場を選択してください（セット図データが必要です）。');
+        return;
+      }
+      const wb = new ExcelJS.Workbook();
+
+      // ── シート1: セット情報（セルで描くセット図 ＋ 3表）──
+      const ws = wb.addWorksheet('セット情報');
+      const W = 8; // ステージ図のグリッド幅
+      ws.columns = Array.from({ length: W }, () => ({ width: 13 }));
+      let r = xlsxHeader(ws, true, W);
+      r = xlsxSectionTitle(ws, r, W, `${d.venue} セット図`);
+
+      const box = (row, col, text, opts = {}) => {
+        const c = ws.getCell(row, col);
+        c.value = text;
+        c.alignment = XL.center;
+        c.font = { size: opts.size || 10, bold: !!opts.bold, color: { argb: opts.color || 'FF666666' } };
+        if (opts.fillArgb) c.fill = XL.fill(opts.fillArgb);
+        c.border = opts.thickArgb
+          ? { top: { style: 'thick', color: { argb: opts.thickArgb } }, left: { style: 'thick', color: { argb: opts.thickArgb } },
+              bottom: { style: 'thick', color: { argb: opts.thickArgb } }, right: { style: 'thick', color: { argb: opts.thickArgb } } }
+          : XL.border;
+      };
+
+      // ドラム（奥中央・ツータム構成）＋マイク
+      box(r, 4, 'Dr.');
+      box(r, 5, '🎤');
+      ws.getRow(r).height = 24;
+      r++;
+      box(r, 4, 'ツータム構成', { bold: true, color: 'FFFFFFFF', fillArgb: 'FF111111' });
+      ws.getRow(r).height = 24;
+      r++;
+
+      // アンプ（VoBa → VoGt → Gt の順で均等配置・色付き）
+      const order = u => (/VoBa/i.test(u) ? 0 : /VoGt/i.test(u) ? 1 : 2);
+      const amps = [...d.amps].sort((a, b) => order(a.use) - order(b.use) || plainNum(a.num) - plainNum(b.num));
+      const cols = amps.length === 1 ? [4]
+        : amps.map((_, i) => Math.round(1 + (W - 1) * i / (amps.length - 1)));
+      amps.forEach((a, i) => {
+        box(r, cols[i], plainNum(a.num), { bold: true, size: 12, color: 'FFFFFFFF', fillArgb: 'FF111111', thickArgb: ampArgb(a.use) });
+      });
+      ws.getRow(r).height = 26;
+      r += 2;
+
+      // メンバー立ち位置
+      box(r, 2, 'Vo.Ba.');
+      box(r, 4, 'Vo.Gt.');
+      box(r, 7, 'Gt.');
+      ws.getRow(r).height = 24;
+      r++;
+      // ボーカルマイク
+      box(r, 2, '🎤');
+      box(r, 4, '🎤');
+      r++;
+      // 転がしモニター
+      [1, 3, 5, 7].forEach(cl => box(r, cl, '▼MON'));
+      r++;
+      ws.mergeCells(r, 1, r, W);
+      const floor = ws.getCell(r, 1);
+      floor.value = 'フロア';
+      floor.alignment = XL.center;
+      floor.font = { size: 10, color: { argb: 'FF666666' } };
+      r += 2;
+
+      // アンプ表（用途セルに図と同じ色）
+      r = xlsxSectionTitle(ws, r, W, 'アンプ');
+      r = xlsxTable(ws, r, ['番号', '用途', '機種', 'レンタル/持込'],
+        d.amps.map(a => [
+          { v: a.num, bold: true },
+          { v: a.use, bold: true, fill: ampArgb(a.use) },
+          { v: a.model },
+          { v: a.note },
+        ]));
+      r = xlsxSectionTitle(ws, r, W, '持ち込み機材');
+      r = xlsxTable(ws, r, ['パート', '機材'],
+        d.gear.map(g => [{ v: g.part, bold: true }, { v: g.text, align: 'left' }]));
+      r = xlsxSectionTitle(ws, r, W, '初期返し要望');
+      r = xlsxTable(ws, r, ['パート', '要望'],
+        d.monitor.map(m => [{ v: m.part, bold: true }, { v: m.text, align: 'left' }]));
+
+      // ── シート2: 照明・音響要望 ──
+      writeCombinedSheet(wb.addWorksheet('照明・音響要望'), true);
+
+      const label = xlsxFileLabel();
+      saveWorkbook(wb, `${label ? label + '_' : ''}スタッフ用シート.xlsx`);
+    }
+
+    // ── Googleスプレッドシート作成（Apps Script Webアプリ経由） ────────────
+    // ★ Apps Script を「ウェブアプリとしてデプロイ（実行: 自分 / アクセス: 全員）」した
+    //    /exec のURLをここに貼る
+    const GS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw_n3gLljPsr2tdw6W7NM24ctnkn2qHqH8_pcyY0q9PYOs42E6MjlNPPc-UCPJcA9h_/exec';
+
+    // SVG文字列 → PNGのdata URI（スプレッドシートに画像として埋め込むため）
+    function svgToPngDataUriGs(svgStr) {
+      return new Promise((resolve, reject) => {
+        const m = svgStr.match(/viewBox="0 0 (\d+) (\d+)"/);
+        const w = m ? +m[1] * 1.5 : 1200;
+        const h = m ? +m[2] * 1.5 : 640;
+        const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          resolve(c.toDataURL('image/png'));
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    function gsMetaLines(includeMeta) {
+      const metas = [];
+      const dateVal  = document.getElementById('live-date').value;
+      const venueVal = document.getElementById('live-venue').value.trim();
+      if (dateVal)  metas.push(formatDateDisplay(dateVal));
+      if (venueVal) metas.push('@ ' + venueVal);
+      if (includeMeta) {
+        const o = getOrderText(); if (o) metas.push(o);
+        const se = getSEText();   if (se) metas.push(se);
+      }
+      return metas;
+    }
+
+    function buildSetzuGsData(d) {
+      const W = 8;
+      const cells = [];
+      cells.push({ r: 0, c: 4, text: 'Dr.' });
+      cells.push({ r: 0, c: 5, text: '🎤' });
+      cells.push({ r: 1, c: 4, text: 'ツータム構成', bold: true, bg: '#111111', fontColor: '#ffffff' });
+      const order = u => (/VoBa/i.test(u) ? 0 : /VoGt/i.test(u) ? 1 : 2);
+      const amps = [...d.amps].sort((a, b) => order(a.use) - order(b.use) || plainNum(a.num) - plainNum(b.num));
+      const cols = amps.length === 1 ? [4]
+        : amps.map((_, i) => Math.round(1 + (W - 1) * i / (amps.length - 1)));
+      amps.forEach((a, i) => {
+        cells.push({ r: 2, c: cols[i], text: plainNum(a.num), bold: true, bg: '#111111', fontColor: '#ffffff', borderColor: ampColor(a.use) });
+      });
+      cells.push({ r: 4, c: 2, text: 'Vo.Ba.' });
+      cells.push({ r: 4, c: 4, text: 'Vo.Gt.' });
+      cells.push({ r: 4, c: 7, text: 'Gt.' });
+      cells.push({ r: 5, c: 2, text: '🎤' });
+      cells.push({ r: 5, c: 4, text: '🎤' });
+      [1, 3, 5, 7].forEach(c => cells.push({ r: 6, c, text: '▼MON' }));
+      cells.push({ r: 7, c: 1, text: 'フロア', span: W });
+      return {
+        venue: d.venue,
+        diagram: cells,
+        diagramRows: 8,
+        amps: d.amps.map(a => [a.num, a.use, a.model, a.note]),
+        ampColors: d.amps.map(a => ampColor(a.use)),
+        gear: d.gear.map(g => [g.part, g.text]),
+        monitor: d.monitor.map(m => [m.part, m.text]),
+      };
+    }
+
+    function buildGsPayload(kind) {
+      const titles = { combined: '照明・音響要望シート', count: 'セットリスト', staff: 'スタッフ用シート' };
+      const label = xlsxFileLabel();
+      const { rows, totalSec } = combinedRowsData();
+      let n = 0;
+      const countRows = items.map(item => {
+        if (item.type === 'mc') return ['', 'MC', ''];
+        n++;
+        const d = SONG_DB[item.name] || {};
+        return [n + '.', item.name, d.count && d.count !== '-' ? d.count : ''];
+      });
+      const payload = {
+        kind,
+        filename: (label ? label + '_' : '') + titles[kind],
+        meta: gsMetaLines(true),
+        metaBasic: gsMetaLines(false),
+        combined: {
+          rows: rows.map(r => r.map(c => c.v)),
+          note: '※全曲ストロボは無しでお願いします',
+          total: '合計 ' + formatDuration(totalSec),
+        },
+        count: { rows: countRows },
+      };
+      if (kind === 'staff') payload.setzu = buildSetzuGsData(currentSetzu());
+      return payload;
+    }
+
+    async function createGoogleSheet(kind) {
+      if (items.filter(i => i.type === 'song').length === 0) {
+        alert('曲を追加してください。');
+        return;
+      }
+      if (kind === 'staff' && !currentSetzu()) {
+        alert('会場を選択してください（セット図データが必要です）。');
+        return;
+      }
+      const msg = document.getElementById('gs-link-' + kind);
+      if (!GS_WEBAPP_URL) {
+        msg.textContent = 'Apps ScriptのWebアプリURLが未設定です';
+        msg.style.color = '#cc6666';
+        return;
+      }
+      msg.style.color = '#aaa';
+      msg.textContent = 'スプレッドシートを作成中...（10秒ほどかかります）';
+      try {
+        const payload = buildGsPayload(kind);
+        if (kind === 'staff') {
+          // PDFと同じセット図（SVG）をPNG化して画像として挿入する
+          try {
+            const dataUri = await svgToPngDataUriGs(setzuDiagramSvg(currentSetzu()));
+            payload.setzu.imageB64 = dataUri.split(',')[1];
+          } catch {} // 変換に失敗したらセル描画版にフォールバック
+        }
+        const res = await fetch(GS_WEBAPP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const j = await res.json();
+        if (!j.url) throw new Error(j.error || 'no url');
+        msg.innerHTML = `<a href="${escapeHtml(j.url)}" target="_blank" rel="noopener" style="color:#7cc4ff;">✓ 作成完了 — 開く ↗</a>`;
+        window.open(j.url, '_blank');
+      } catch (e) {
+        msg.style.color = '#cc6666';
+        msg.textContent = '作成に失敗しました（WebアプリのデプロイとURLを確認してください）';
+      }
+    }
+
+    // ── Clear ────────────────────────────────────────────────────────────
+
+    function clearAll() {
+      if (items.length === 0) return;
+      if (!confirm('リストをクリアしますか？')) return;
+      items = [];
+      renderList();
+      document.getElementById('output-section').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>

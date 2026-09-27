@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoritaSaki in the pool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="preview-cream.css" />
+</head>
+<body>
+
+  <nav>
+    <a class="nav-mark" href="index.html" aria-label="TOPへ戻る"><img src="../../logo.avif" alt="MoritaSaki in the pool" /></a>
+    <a href="index.html" class="active">TOP</a>
+    <a href="about.html">About</a>
+    <a href="music.html">Music</a>
+    <a href="mv.html">MV</a>
+    <a href="schedule.html">Schedule</a>
+    <a href="goods.html">Merchandise</a>
+    <a href="others.html">Others</a>
+    <span id="site-ver" class="site-ver"></span>
+  </nav>
+
+  <script>
+    // ナビのアクティブなタブが横スクロールで隠れないよう表示範囲に入れる
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
+  <!-- Hero -->
+  <section id="hero">
+    <h1 class="hero-logo"><img src="../../logo.avif" alt="MoritaSaki in the pool" /></h1>
+    <div class="hero-instructions">
+      <p class="instructions-label">[ Instructions ]</p>
+      <p class="instructions-sub">Those that meet these criteria are considered MoritaSaki in the pool.</p>
+      <ol class="instructions-list">
+        <li>
+          <div class="inst-en">Introducing, "We are MoritaSaki in the Pool."</div>
+          <div class="inst-ja">「モリタサキ・イン・ザ・プールです」と名乗る。</div>
+        </li>
+        <li>
+          <div class="inst-en">Vocal-track is two voices, male and female (or so it sounds), in unison.</div>
+          <div class="inst-ja">ボーカル・トラックは男女2声（またはそのように聞こえる）のユニゾンである。</div>
+        </li>
+        <li>
+          <div class="inst-en">Apply chorus effect to guitar sound.</div>
+          <div class="inst-ja">ギターのサウンドにはコーラス・エフェクトをかける。</div>
+        </li>
+        <li>
+          <div class="inst-en">Perform MoritaSaki in the pool's song and other artist's song.</div>
+          <div class="inst-ja">モリタサキ・イン・ザ・プール及び、他のアーティストの曲を演奏する。</div>
+        </li>
+        <li>
+          <div class="inst-en">And say "I love you." To one person. Or more.</div>
+          <div class="inst-ja">そして「愛している」と伝える。ひとりに。あるいはそれ以上に。</div>
+        </li>
+      </ol>
+    </div>
+
+    <div class="page-nav">
+      <span></span>
+      <a href="about.html">About →</a>
+    </div>
+  </section>
+
+<script>
+  // ── サイトバージョン（最新コミット日時から自動生成）──
+  async function loadVersion() {
+    try {
+      const res = await fetch('https://api.github.com/repos/nino-msip/moritasaki-in-the-pool/commits/main');
+      if (!res.ok) return;
+      const data = await res.json();
+      const d = new Date(data.commit.committer.date);
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('site-ver').textContent =
+        `ver ${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}`;
+    } catch {}
+  }
+  loadVersion();
+</script>
+</body>
+</html>

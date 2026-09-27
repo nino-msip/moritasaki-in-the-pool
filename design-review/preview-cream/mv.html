@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MV — MoritaSaki in the pool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="preview-cream.css" />
+</head>
+<body>
+
+  <nav>
+    <a class="nav-mark" href="index.html" aria-label="TOPへ戻る"><img src="../../logo.avif" alt="MoritaSaki in the pool" /></a>
+    <a href="index.html">TOP</a>
+    <a href="about.html">About</a>
+    <a href="music.html">Music</a>
+    <a href="mv.html" class="active">MV</a>
+    <a href="schedule.html">Schedule</a>
+    <a href="goods.html">Merchandise</a>
+    <a href="others.html">Others</a>
+    <span id="site-ver" class="site-ver"></span>
+  </nav>
+
+  <script>
+    // ナビのアクティブなタブが横スクロールで隠れないよう表示範囲に入れる
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
+  <!-- MV -->
+  <section id="mv">
+    <h2>MV</h2>
+
+    <div class="mv-grid">
+      <a class="mv-card" href="https://www.youtube.com/watch?v=sSI-XLPiaXk" target="_blank" data-video-id="sSI-XLPiaXk">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/sSI-XLPiaXk/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
+        <div class="mv-title">Ice box</div>
+      </a>
+      <a class="mv-card" href="https://www.youtube.com/watch?v=gzDnwmDP9NQ" target="_blank" data-video-id="gzDnwmDP9NQ">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/gzDnwmDP9NQ/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
+        <div class="mv-title">MIRROR'S EDGE</div>
+      </a>
+      <a class="mv-card" href="https://www.youtube.com/watch?v=36OBx4FspiA" target="_blank" data-video-id="36OBx4FspiA">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/36OBx4FspiA/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
+        <div class="mv-title">IKAROS</div>
+      </a>
+      <a class="mv-card" href="https://www.youtube.com/watch?v=nnHp84WGado" target="_blank" data-video-id="nnHp84WGado">
+        <div class="mv-thumb-wrap">
+          <img class="mv-thumb" src="https://i.ytimg.com/vi/nnHp84WGado/hqdefault.jpg" alt="" loading="lazy" />
+        </div>
+        <div class="mv-title">BALLOON DOG</div>
+      </a>
+    </div>
+
+    <div class="page-nav">
+      <a href="music.html">← Music</a>
+      <a href="schedule.html">Schedule →</a>
+    </div>
+  </section>
+
+<script>
+  // ── サイトバージョン（最新コミット日時から自動生成）──
+  async function loadVersion() {
+    try {
+      const res = await fetch('https://api.github.com/repos/nino-msip/moritasaki-in-the-pool/commits/main');
+      if (!res.ok) return;
+      const data = await res.json();
+      const d = new Date(data.commit.committer.date);
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('site-ver').textContent =
+        `ver ${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}`;
+    } catch {}
+  }
+  loadVersion();
+
+  // ── MV: ホバーで10秒地点からミュートプレビュー再生 ──
+  document.querySelectorAll('.mv-card').forEach(card => {
+    const wrap = card.querySelector('.mv-thumb-wrap');
+    const id = card.dataset.videoId;
+    if (!wrap || !id) return;
+    let timer = null;
+    let frame = null;
+
+    card.addEventListener('mouseenter', () => {
+      timer = setTimeout(() => {
+        frame = document.createElement('iframe');
+        frame.className = 'mv-preview-frame';
+        frame.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&start=10&controls=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}`;
+        frame.allow = 'autoplay; encrypted-media';
+        frame.setAttribute('frameborder', '0');
+        wrap.appendChild(frame);
+      }, 300);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      clearTimeout(timer);
+      if (frame) { frame.remove(); frame = null; }
+    });
+  });
+</script>
+</body>
+</html>

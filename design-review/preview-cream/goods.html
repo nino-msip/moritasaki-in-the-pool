@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merchandise — MoritaSaki in the pool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="preview-cream.css" />
+</head>
+<body>
+
+  <nav>
+    <a class="nav-mark" href="index.html" aria-label="TOPへ戻る"><img src="../../logo.avif" alt="MoritaSaki in the pool" /></a>
+    <a href="index.html">TOP</a>
+    <a href="about.html">About</a>
+    <a href="music.html">Music</a>
+    <a href="mv.html">MV</a>
+    <a href="schedule.html">Schedule</a>
+    <a href="goods.html" class="active">Merchandise</a>
+    <a href="others.html">Others</a>
+    <span id="site-ver" class="site-ver"></span>
+  </nav>
+
+  <script>
+    // ナビのアクティブなタブが横スクロールで隠れないよう表示範囲に入れる
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
+  <!-- Goods -->
+  <section id="goods">
+    <h2>Merchandise</h2>
+
+    <div class="music-links">
+      <a href="https://mitp.base.shop" target="_blank"><img class="link-icon" src="../../icons/base.png" alt="" />BASE Official Shop</a>
+      <a href="https://moritasaki.bandcamp.com/merch" target="_blank"><img class="link-icon" src="../../icons/bandcamp.svg" alt="" />Bandcamp Merch</a>
+    </div>
+
+    <div class="page-nav">
+      <a href="schedule.html">← Schedule</a>
+      <a href="others.html">Others →</a>
+    </div>
+  </section>
+
+<script>
+  // ── サイトバージョン（最新コミット日時から自動生成）──
+  async function loadVersion() {
+    try {
+      const res = await fetch('https://api.github.com/repos/nino-msip/moritasaki-in-the-pool/commits/main');
+      if (!res.ok) return;
+      const data = await res.json();
+      const d = new Date(data.commit.committer.date);
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('site-ver').textContent =
+        `ver ${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}`;
+    } catch {}
+  }
+  loadVersion();
+</script>
+</body>
+</html>

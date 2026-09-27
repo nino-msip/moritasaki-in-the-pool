@@ -1,0 +1,47 @@
+/* ── Preview: cream nav + colorful per-tab pills ──
+   本体(style.css)は変更せず、このプレビュー用ページだけに上書きで適用 */
+
+nav {
+  background: #fff3b8 !important;
+}
+
+nav a.nav-mark {
+  /* ロゴ下の帯が黒前提の見え方なので、クリーム地でも視認できるよう軽い背景を残す */
+  background: transparent;
+}
+
+/* タブ本体（ロゴを除く7つ）に個別カラーを割り当て */
+nav a:nth-of-type(2) { background: #ffadad; color: #7a0000; }
+nav a:nth-of-type(3) { background: #ffd6a5; color: #7a3e00; }
+nav a:nth-of-type(4) { background: #fdffb6; color: #6b6300; }
+nav a:nth-of-type(5) { background: #caffbf; color: #0d5c1f; }
+nav a:nth-of-type(6) { background: #9bf6ff; color: #004e5c; }
+nav a:nth-of-type(7) { background: #a0c4ff; color: #002b7a; }
+nav a:nth-of-type(8) { background: #bdb2ff; color: #3d0b7a; }
+
+nav a:nth-of-type(2),
+nav a:nth-of-type(3),
+nav a:nth-of-type(4),
+nav a:nth-of-type(5),
+nav a:nth-of-type(6),
+nav a:nth-of-type(7),
+nav a:nth-of-type(8) {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border-bottom: none !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* 選択中 / ホバー時は背景と文字色を反転 */
+nav a:nth-of-type(2):hover, nav a:nth-of-type(2).active { background: #7a0000; color: #ffadad; }
+nav a:nth-of-type(3):hover, nav a:nth-of-type(3).active { background: #7a3e00; color: #ffd6a5; }
+nav a:nth-of-type(4):hover, nav a:nth-of-type(4).active { background: #6b6300; color: #fdffb6; }
+nav a:nth-of-type(5):hover, nav a:nth-of-type(5).active { background: #0d5c1f; color: #caffbf; }
+nav a:nth-of-type(6):hover, nav a:nth-of-type(6).active { background: #004e5c; color: #9bf6ff; }
+nav a:nth-of-type(7):hover, nav a:nth-of-type(7).active { background: #002b7a; color: #a0c4ff; }
+nav a:nth-of-type(8):hover, nav a:nth-of-type(8).active { background: #3d0b7a; color: #bdb2ff; }
+
+.nav-ver,
+.site-ver {
+  color: #7a6a2e !important;
+}
