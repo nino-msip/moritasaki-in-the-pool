@@ -72,3 +72,55 @@ nav a:nth-of-type(8):hover, nav a:nth-of-type(8).active { background: #3d0b7a; c
 .site-ver {
   color: #7a6a2e !important;
 }
+
+/* ── 外部サービスへのボタン/アイコンは黒カードではなく、それぞれの
+   サービスのイメージカラーに合わせる（href で判定、マークアップは無改修） ── */
+
+/* Spotify */
+.music-links a[href*="spotify.com"] { background: #1db954; color: #04260f; }
+.music-links a[href*="spotify.com"]:hover { filter: brightness(0.9); }
+
+/* Apple Music */
+.music-links a[href*="music.apple.com"] {
+  background: linear-gradient(135deg, #fa5a7d, #fa233b);
+  color: #fff;
+}
+.music-links a[href*="music.apple.com"]:hover { filter: brightness(0.92); }
+
+/* YouTube */
+.music-links a[href*="youtube.com"] { background: #ff0000; color: #fff; }
+.music-links a[href*="youtube.com"]:hover { filter: brightness(0.88); }
+
+/* Bandcamp */
+.music-links a[href*="bandcamp.com"] { background: #1da0c3; color: #022733; }
+.music-links a[href*="bandcamp.com"]:hover { filter: brightness(0.9); }
+
+/* BASE */
+.music-links a[href*="base.shop"] { background: #00c4b3; color: #003330; }
+.music-links a[href*="base.shop"]:hover { filter: brightness(0.9); }
+
+/* note */
+.music-links a[href*="note.com"] { background: #41c9b4; color: #00332b; }
+.music-links a[href*="note.com"]:hover { filter: brightness(0.9); }
+
+/* X (black is already X's own brand color — keep, just confirm no accidental override) */
+.music-links a[href*="x.com"], .music-links a[href*="twitter.com"] { background: #000; color: #fff; }
+
+/* Instagram */
+.music-links a[href*="instagram.com"] {
+  background: linear-gradient(45deg, #833ab4, #fd1d1d 60%, #fcaf45);
+  color: #fff;
+}
+.music-links a[href*="instagram.com"]:hover { filter: brightness(0.9); }
+
+/* Setlist Tool（外部ではないがOthers内で浮くのでサイトのレッドに寄せる） */
+.music-links a[href="setlist.html"] { background: var(--red); color: #fff; }
+.music-links a[href="setlist.html"]:hover { filter: brightness(0.9); }
+
+/* メンバーカードのSNSバッジも同様にブランドカラーへ
+   （InstagramはURL短縮(x.gd)経由のためhrefでなくaria-labelで判定） */
+.member-sns a[aria-label="X"] { background: #000; }
+.member-sns a[aria-label="Instagram"] {
+  background: linear-gradient(45deg, #833ab4, #fd1d1d 60%, #fcaf45);
+}
+.member-sns a:hover { filter: brightness(0.9); }
