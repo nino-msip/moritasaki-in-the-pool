@@ -76,51 +76,64 @@ nav a:nth-of-type(8):hover, nav a:nth-of-type(8).active { background: #3d0b7a; c
 /* ── 外部サービスへのボタン/アイコンは黒カードではなく、それぞれの
    サービスのイメージカラーに合わせる（href で判定、マークアップは無改修） ── */
 
+/* 薄め（パステル）のブランドカラー。アイコンは元が白塗りの単色SVGなので、
+   背景が明るくなった分だけ濃色シルエットに落として視認性を確保する */
+
 /* Spotify */
-.music-links a[href*="spotify.com"] { background: #1db954; color: #04260f; }
-.music-links a[href*="spotify.com"]:hover { filter: brightness(0.9); }
+.music-links a[href*="spotify.com"] { background: #cdf2dc; color: #0b5c2c; }
+.music-links a[href*="spotify.com"] .link-icon { filter: brightness(0) saturate(100%) invert(22%) sepia(54%) saturate(1100%) hue-rotate(96deg); }
+.music-links a[href*="spotify.com"]:hover { filter: brightness(0.95); }
 
 /* Apple Music */
 .music-links a[href*="music.apple.com"] {
-  background: linear-gradient(135deg, #fa5a7d, #fa233b);
-  color: #fff;
+  background: linear-gradient(135deg, #ffd6de, #ffb9c6);
+  color: #8a1030;
 }
-.music-links a[href*="music.apple.com"]:hover { filter: brightness(0.92); }
+.music-links a[href*="music.apple.com"] .link-icon { filter: brightness(0) saturate(100%) invert(14%) sepia(60%) saturate(3000%) hue-rotate(327deg); }
+.music-links a[href*="music.apple.com"]:hover { filter: brightness(0.96); }
 
 /* YouTube */
-.music-links a[href*="youtube.com"] { background: #ff0000; color: #fff; }
-.music-links a[href*="youtube.com"]:hover { filter: brightness(0.88); }
+.music-links a[href*="youtube.com"] { background: #ffd2d2; color: #8a0000; }
+.music-links a[href*="youtube.com"] .link-icon { filter: brightness(0) saturate(100%) invert(10%) sepia(90%) saturate(6000%) hue-rotate(0deg); }
+.music-links a[href*="youtube.com"]:hover { filter: brightness(0.95); }
 
 /* Bandcamp */
-.music-links a[href*="bandcamp.com"] { background: #1da0c3; color: #022733; }
-.music-links a[href*="bandcamp.com"]:hover { filter: brightness(0.9); }
+.music-links a[href*="bandcamp.com"] { background: #c8edf5; color: #0a5569; }
+.music-links a[href*="bandcamp.com"] .link-icon { filter: brightness(0) saturate(100%) invert(26%) sepia(75%) saturate(1100%) hue-rotate(165deg); }
+.music-links a[href*="bandcamp.com"]:hover { filter: brightness(0.95); }
 
 /* BASE */
-.music-links a[href*="base.shop"] { background: #00c4b3; color: #003330; }
-.music-links a[href*="base.shop"]:hover { filter: brightness(0.9); }
+.music-links a[href*="base.shop"] { background: #c6f1ea; color: #00534a; }
+.music-links a[href*="base.shop"]:hover { filter: brightness(0.95); }
 
 /* note */
-.music-links a[href*="note.com"] { background: #41c9b4; color: #00332b; }
-.music-links a[href*="note.com"]:hover { filter: brightness(0.9); }
+.music-links a[href*="note.com"] { background: #cdf2ea; color: #0b5c4e; }
+.music-links a[href*="note.com"] .link-icon-lg { filter: brightness(0) saturate(100%) invert(26%) sepia(45%) saturate(900%) hue-rotate(125deg); }
+.music-links a[href*="note.com"]:hover { filter: brightness(0.95); }
 
-/* X (black is already X's own brand color — keep, just confirm no accidental override) */
-.music-links a[href*="x.com"], .music-links a[href*="twitter.com"] { background: #000; color: #fff; }
+/* X */
+.music-links a[href*="x.com"], .music-links a[href*="twitter.com"] { background: #e3e3e3; color: #1a1a1a; }
+.music-links a[href*="x.com"] .link-icon, .music-links a[href*="twitter.com"] .link-icon { filter: brightness(0); }
 
 /* Instagram */
 .music-links a[href*="instagram.com"] {
-  background: linear-gradient(45deg, #833ab4, #fd1d1d 60%, #fcaf45);
-  color: #fff;
+  background: linear-gradient(45deg, #e3c6f0, #ffc9c9 60%, #ffe3b3);
+  color: #7a1f5c;
 }
-.music-links a[href*="instagram.com"]:hover { filter: brightness(0.9); }
+.music-links a[href*="instagram.com"] .link-icon { filter: brightness(0) saturate(100%) invert(16%) sepia(50%) saturate(2000%) hue-rotate(290deg); }
+.music-links a[href*="instagram.com"]:hover { filter: brightness(0.95); }
 
-/* Setlist Tool（外部ではないがOthers内で浮くのでサイトのレッドに寄せる） */
-.music-links a[href="setlist.html"] { background: var(--red); color: #fff; }
-.music-links a[href="setlist.html"]:hover { filter: brightness(0.9); }
+/* Setlist Tool（外部ではないがOthers内で浮くのでサイトのレッドに寄せる・薄め） */
+.music-links a[href="setlist.html"] { background: #ffd2d2; color: #8a0000; }
+.music-links a[href="setlist.html"] .link-icon-lg { color: #8a0000; }
+.music-links a[href="setlist.html"]:hover { filter: brightness(0.95); }
 
-/* メンバーカードのSNSバッジも同様にブランドカラーへ
+/* メンバーカードのSNSバッジも同様にブランドカラーへ（薄め）
    （InstagramはURL短縮(x.gd)経由のためhrefでなくaria-labelで判定） */
-.member-sns a[aria-label="X"] { background: #000; }
+.member-sns a[aria-label="X"] { background: #e3e3e3; }
+.member-sns a[aria-label="X"] .sns-icon { filter: brightness(0); }
 .member-sns a[aria-label="Instagram"] {
-  background: linear-gradient(45deg, #833ab4, #fd1d1d 60%, #fcaf45);
+  background: linear-gradient(45deg, #e3c6f0, #ffc9c9 60%, #ffe3b3);
 }
-.member-sns a:hover { filter: brightness(0.9); }
+.member-sns a[aria-label="Instagram"] .sns-icon { filter: brightness(0) saturate(100%) invert(16%) sepia(50%) saturate(2000%) hue-rotate(290deg); }
+.member-sns a:hover { filter: brightness(0.95); }
