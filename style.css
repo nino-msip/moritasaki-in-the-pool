@@ -1,7 +1,7 @@
 :root {
   --ink-ground: #0d0d0d;
-  --paper: #f5f4f2;
-  --paper-line: #dedcd7;
+  --paper: #fff3b8;
+  --paper-line: #e9d98f;
   --white: #ffffff;
   --black: #0d0d0d;
   --red: #e62429;
@@ -36,12 +36,12 @@ nav {
   top: 0;
   width: 100%;
   height: var(--nav-h);
-  background: var(--ink-ground);
+  background: var(--paper);
   border-bottom: 3px solid var(--red);
   padding: 0 32px;
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 14px;
   z-index: 100;
   overflow-x: auto;
   scrollbar-width: none;
@@ -57,7 +57,7 @@ nav::-webkit-scrollbar { display: none; }
 .nav-mark img { height: 26px; width: auto; display: block; }
 
 nav a {
-  color: #cfcfcf;
+  color: #1a1a1a;
   text-decoration: none;
   font-family: 'Roboto Condensed', sans-serif;
   font-weight: 700;
@@ -65,19 +65,37 @@ nav a {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
-  padding: 4px 2px;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  padding: 7px 16px 8px;
+  border-radius: 3px;
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.18);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-nav a:hover {
-  color: #fff;
-}
+/* タブごとに個別カラー（付箋/インデックス風） */
+nav a:nth-of-type(2) { background: #ffadad; color: #7a0000; transform: rotate(-2deg); }
+nav a:nth-of-type(3) { background: #ffd6a5; color: #7a3e00; transform: rotate(2deg); }
+nav a:nth-of-type(4) { background: #fdffb6; color: #6b6300; transform: rotate(-2deg); }
+nav a:nth-of-type(5) { background: #caffbf; color: #0d5c1f; transform: rotate(2deg); }
+nav a:nth-of-type(6) { background: #9bf6ff; color: #004e5c; transform: rotate(-2deg); }
+nav a:nth-of-type(7) { background: #a0c4ff; color: #002b7a; transform: rotate(2deg); }
+nav a:nth-of-type(8) { background: #bdb2ff; color: #3d0b7a; transform: rotate(-2deg); }
 
-nav a.active {
-  color: #fff;
-  border-color: var(--red);
-  padding-bottom: 2px;
+nav a:nth-of-type(2):hover, nav a:nth-of-type(2).active { background: #7a0000; color: #ffadad; }
+nav a:nth-of-type(3):hover, nav a:nth-of-type(3).active { background: #7a3e00; color: #ffd6a5; }
+nav a:nth-of-type(4):hover, nav a:nth-of-type(4).active { background: #6b6300; color: #fdffb6; }
+nav a:nth-of-type(5):hover, nav a:nth-of-type(5).active { background: #0d5c1f; color: #caffbf; }
+nav a:nth-of-type(6):hover, nav a:nth-of-type(6).active { background: #004e5c; color: #9bf6ff; }
+nav a:nth-of-type(7):hover, nav a:nth-of-type(7).active { background: #002b7a; color: #a0c4ff; }
+nav a:nth-of-type(8):hover, nav a:nth-of-type(8).active { background: #3d0b7a; color: #bdb2ff; }
+
+nav a:nth-of-type(2):hover, nav a:nth-of-type(2).active,
+nav a:nth-of-type(3):hover, nav a:nth-of-type(3).active,
+nav a:nth-of-type(4):hover, nav a:nth-of-type(4).active,
+nav a:nth-of-type(5):hover, nav a:nth-of-type(5).active,
+nav a:nth-of-type(6):hover, nav a:nth-of-type(6).active,
+nav a:nth-of-type(7):hover, nav a:nth-of-type(7).active,
+nav a:nth-of-type(8):hover, nav a:nth-of-type(8).active {
+  transform: rotate(0deg) translateY(-2px);
 }
 
 /* ページ送り */
@@ -107,7 +125,7 @@ nav a.active {
 .site-ver {
   margin-left: auto;
   font-size: 10.5px;
-  color: #5a5a5a;
+  color: #7a6a2e;
   letter-spacing: 0.05em;
   white-space: nowrap;
   align-self: center;
@@ -326,10 +344,6 @@ p {
   transition: background 0.15s ease;
 }
 
-.member-sns a:hover {
-  background: var(--red);
-}
-
 .sns-icon {
   width: 18px;
   height: 18px;
@@ -401,8 +415,53 @@ p {
   height: 32px;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+/* ── 外部サービスは黒カードではなく、それぞれのブランドカラー（薄め）に。
+   X / Instagram は元のブランド通り（黒・鮮やかなグラデーション）のまま ── */
+
+.music-links a[href*="spotify.com"] { background: #cdf2dc; color: #0b5c2c; }
+.music-links a[href*="spotify.com"] .link-icon { filter: brightness(0) saturate(100%) invert(22%) sepia(54%) saturate(1100%) hue-rotate(96deg); }
+.music-links a[href*="spotify.com"]:hover { filter: brightness(0.95); }
+
+.music-links a[href*="music.apple.com"] {
+  background: linear-gradient(135deg, #ffd6de, #ffb9c6);
+  color: #8a1030;
+}
+.music-links a[href*="music.apple.com"] .link-icon { filter: brightness(0) saturate(100%) invert(14%) sepia(60%) saturate(3000%) hue-rotate(327deg); }
+.music-links a[href*="music.apple.com"]:hover { filter: brightness(0.96); }
+
+.music-links a[href*="youtube.com"] { background: #ffd2d2; color: #8a0000; }
+.music-links a[href*="youtube.com"] .link-icon { filter: brightness(0) saturate(100%) invert(10%) sepia(90%) saturate(6000%) hue-rotate(0deg); }
+.music-links a[href*="youtube.com"]:hover { filter: brightness(0.95); }
+
+.music-links a[href*="bandcamp.com"] { background: #c8edf5; color: #0a5569; }
+.music-links a[href*="bandcamp.com"] .link-icon { filter: brightness(0) saturate(100%) invert(26%) sepia(75%) saturate(1100%) hue-rotate(165deg); }
+.music-links a[href*="bandcamp.com"]:hover { filter: brightness(0.95); }
+
+.music-links a[href*="base.shop"] { background: #c6f1ea; color: #00534a; }
+.music-links a[href*="base.shop"]:hover { filter: brightness(0.95); }
+
+.music-links a[href*="note.com"] { background: #cdf2ea; color: #0b5c4e; }
+.music-links a[href*="note.com"] .link-icon-lg { filter: brightness(0) saturate(100%) invert(26%) sepia(45%) saturate(900%) hue-rotate(125deg); }
+.music-links a[href*="note.com"]:hover { filter: brightness(0.95); }
+
+.music-links a[href*="x.com"], .music-links a[href*="twitter.com"] { background: #000; color: #fff; }
+
+.music-links a[href*="instagram.com"] {
+  background: linear-gradient(45deg, #833ab4, #fd1d1d 60%, #fcaf45);
   color: #fff;
 }
+.music-links a[href*="instagram.com"]:hover { filter: brightness(0.9); }
+
+.music-links a[href="setlist.html"] { background: #ffd2d2; color: #8a0000; }
+.music-links a[href="setlist.html"]:hover { filter: brightness(0.95); }
+
+.member-sns a[aria-label="X"] { background: #000; }
+.member-sns a[aria-label="Instagram"] {
+  background: linear-gradient(45deg, #833ab4, #fd1d1d 60%, #fcaf45);
+}
+.member-sns a:hover { filter: brightness(0.9); }
 
 .others-subhead {
   font-family: 'Roboto Condensed', sans-serif;
