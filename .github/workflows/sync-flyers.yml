@@ -21,18 +21,19 @@ jobs:
       - name: Install dependencies
         run: pip install --quiet pillow
 
-      - name: Fetch flyer images from Google Drive
+      - name: Fetch flyer images from ticket sites
         env:
-          GDRIVE_API_KEY: ${{ secrets.GDRIVE_API_KEY }}
+          BIT_APP_ID: ${{ secrets.BIT_APP_ID }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
         run: python3 scripts/sync_flyers.py
 
       - name: Commit and push if changed
         run: |
           git config user.name "flyer-sync-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add flyers
+          git add flyers scripts/event_cache.json
           if ! git diff --cached --quiet; then
-            git commit -m "Sync schedule flyers from Google Drive [automated]"
+            git commit -m "Sync schedule flyers [automated]"
             git pull --rebase origin main
             git push
           else
