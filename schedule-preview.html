@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule (Preview) — MoritaSaki in the pool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .bit-widget-container {
+      margin: 0 auto;
+      max-width: 860px;
+    }
+    .preview-note {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    /* ── Bandsintown ウィジェット上書き ── */
+    .bit-widget .bit-event {
+      background: #fff !important;
+      border: 1px solid var(--paper-line) !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .bit-widget .bit-event:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+    }
+    .bit-widget .bit-date,
+    .bit-widget .bit-month,
+    .bit-widget .bit-day {
+      color: var(--red) !important;
+      font-family: 'Roboto Condensed', sans-serif !important;
+      font-weight: 700 !important;
+    }
+    .bit-widget .bit-venue-name,
+    .bit-widget .bit-event-title {
+      font-family: 'Anton', 'Noto Sans JP', sans-serif !important;
+      color: var(--black) !important;
+    }
+    .bit-widget .bit-location {
+      color: var(--ink-dim-onwhite) !important;
+      font-size: 13px !important;
+    }
+    .bit-widget .bit-rsvp,
+    .bit-widget .bit-ticket-button {
+      background: transparent !important;
+      border: 1px solid var(--black) !important;
+      color: var(--black) !important;
+      border-radius: 0 !important;
+      font-family: 'Roboto Condensed', sans-serif !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.06em !important;
+      text-transform: uppercase !important;
+      font-size: 11px !important;
+      transition: border-color 0.15s, color 0.15s !important;
+    }
+    .bit-widget .bit-rsvp:hover,
+    .bit-widget .bit-ticket-button:hover {
+      border-color: var(--red) !important;
+      color: var(--red) !important;
+    }
+    .bit-widget .bit-header,
+    .bit-widget .bit-top-track-search,
+    .bit-widget .bit-play-my-city {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-mark" href="index.html" aria-label="TOPへ戻る"><img src="logo.avif" alt="MoritaSaki in the pool" /></a>
+    <a href="index.html">TOP</a>
+    <a href="about.html">About</a>
+    <a href="music.html">Music</a>
+    <a href="mv.html">MV</a>
+    <a href="schedule.html">Schedule</a>
+    <a href="goods.html">Merchandise</a>
+    <a href="others.html">Others</a>
+  </nav>
+
+  <script>
+    (function () {
+      var active = document.querySelector('nav a.active');
+      if (active) active.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    })();
+  </script>
+
+  <section id="schedule">
+    <h2>Live Schedule</h2>
+    <p class="preview-note">※ これはBandsintownウィジェットのプレビューです。本番ページには影響しません。</p>
+
+    <div class="bit-widget-container">
+      <a class="bit-widget-initializer"
+         data-artist-name="MoritaSaki in the pool"
+         data-display-local-dates="false"
+         data-display-past-dates="false"
+         data-auto-style="false"
+         data-button-label-capitalization="uppercase"
+         data-header-capitalization="uppercase"
+         data-location-capitalization="uppercase"
+         data-venue-capitalization="uppercase"
+         data-display-limit="all"
+         data-display-start-time="true"
+         data-link-color="#c0392b"
+         data-background-color="#ffffff"
+         data-display-lineup="true"
+         data-display-play-my-city="false"
+         data-lang="ja"
+      ></a>
+      <script charset="utf-8" src="//widget.bandsintown.com/main.min.js"></script>
+    </div>
+
+    <div class="page-nav">
+      <a href="mv.html">← MV</a>
+      <a href="goods.html">Merchandise →</a>
+    </div>
+  </section>
+
+</body>
+</html>
